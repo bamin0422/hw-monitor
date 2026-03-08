@@ -2,6 +2,8 @@
 
 Hardware Communication Monitoring Tool with LLM Chat
 
+> **[Website](https://hw-monitor-website.vercel.app)** | **[Download](https://github.com/bamin0422/hw-monitor/releases/latest)**
+
 Serial, TCP, UDP, BLE 통신을 모니터링하고, LLM 채팅으로 데이터를 분석할 수 있는 데스크톱 애플리케이션입니다.
 
 ## Features

@@ -11,6 +11,7 @@ permissions:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: macos-latest
@@ -26,6 +27,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install setuptools for node-gyp
+        run: pip install setuptools
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -37,6 +46,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libudev-dev libusb-1.0-0-dev libbluetooth-dev
+
+      - name: Install Windows build tools
+        if: matrix.platform == 'win'
+        run: npm install --global windows-build-tools node-gyp@latest || true
 
       - name: Install dependencies
         run: npm ci

@@ -91,8 +91,122 @@ const settingsAPI = {
 const authAPI = {
   getUser: () => ipcRenderer.invoke('auth:get-user'),
   logout: () => ipcRenderer.invoke('auth:logout'),
+  login: (provider: 'github' | 'google') =>
+    ipcRenderer.invoke('auth:login', provider),
+  refreshToken: () => ipcRenderer.invoke('auth:refresh-token'),
   googleLogin: (clientId: string, clientSecret: string) =>
-    ipcRenderer.invoke('auth:google-login', clientId, clientSecret)
+    ipcRenderer.invoke('auth:google-login', clientId, clientSecret),
+  supabaseLogin: (supabaseUrl: string, supabaseKey: string, provider: 'github' | 'google') =>
+    ipcRenderer.invoke('auth:supabase-login', supabaseUrl, supabaseKey, provider)
+}
+
+// LLM API
+const llmAPI = {
+  stream: (params: {
+    provider: string
+    model: string
+    apiKey: string
+    messages: { role: string; content: string }[]
+    systemPrompt: string
+    maxTokens: number
+    temperature: number
+    baseUrl?: string
+    extraHeaders?: Record<string, string>
+    connections?: { connectionId: string; connectionType: string; label: string; status: string; config: Record<string, unknown> }[]
+    activeConnectionId?: string | null
+  }) => ipcRenderer.invoke('llm:stream', params),
+  cancel: (requestId: string) => ipcRenderer.invoke('llm:cancel', requestId),
+  onChunk: (callback: (requestId: string, text: string) => void) => {
+    const handler = (_: unknown, requestId: string, text: string) =>
+      callback(requestId, text)
+    ipcRenderer.on('llm:chunk', handler)
+    return () => ipcRenderer.removeListener('llm:chunk', handler)
+  },
+  onDone: (callback: (requestId: string) => void) => {
+    const handler = (_: unknown, requestId: string) => callback(requestId)
+    ipcRenderer.on('llm:done', handler)
+    return () => ipcRenderer.removeListener('llm:done', handler)
+  },
+  onError: (callback: (requestId: string, error: string) => void) => {
+    const handler = (_: unknown, requestId: string, error: string) =>
+      callback(requestId, error)
+    ipcRenderer.on('llm:error', handler)
+    return () => ipcRenderer.removeListener('llm:error', handler)
+  },
+  // RAG data store
+  ragAdd: (
+    entry: { timestamp: number; direction: string; raw: number[]; from?: string },
+    connectionId: string,
+    connectionType: string
+  ) => ipcRenderer.invoke('llm:rag-add', entry, connectionId, connectionType),
+  ragBulkAdd: (
+    entries: { timestamp: number; direction: string; raw: number[]; from?: string }[],
+    connectionId: string,
+    connectionType: string
+  ) => ipcRenderer.invoke('llm:rag-bulk-add', entries, connectionId, connectionType),
+  ragSearch: (
+    query: string,
+    options?: { connectionId?: string; limit?: number; direction?: string; timeRangeMinutes?: number }
+  ) => ipcRenderer.invoke('llm:rag-search', query, options),
+  ragStats: () => ipcRenderer.invoke('llm:rag-stats'),
+  ragClear: (connectionId?: string) => ipcRenderer.invoke('llm:rag-clear', connectionId)
+}
+
+// BLE API
+const bleAPI = {
+  available: () => ipcRenderer.invoke('ble:available'),
+  scan: (durationMs?: number) => ipcRenderer.invoke('ble:scan', durationMs),
+  stopScan: () => ipcRenderer.invoke('ble:stop-scan'),
+  connect: (connId: string, deviceId: string) =>
+    ipcRenderer.invoke('ble:connect', connId, deviceId),
+  disconnect: (connId: string) => ipcRenderer.invoke('ble:disconnect', connId),
+  read: (connId: string, serviceUuid: string, charUuid: string) =>
+    ipcRenderer.invoke('ble:read', connId, serviceUuid, charUuid),
+  write: (connId: string, serviceUuid: string, charUuid: string, data: number[], withoutResponse: boolean) =>
+    ipcRenderer.invoke('ble:write', connId, serviceUuid, charUuid, data, withoutResponse),
+  subscribe: (connId: string, serviceUuid: string, charUuid: string) =>
+    ipcRenderer.invoke('ble:subscribe', connId, serviceUuid, charUuid),
+  unsubscribe: (connId: string, serviceUuid: string, charUuid: string) =>
+    ipcRenderer.invoke('ble:unsubscribe', connId, serviceUuid, charUuid),
+  onDeviceFound: (callback: (device: unknown) => void) => {
+    const handler = (_: unknown, device: unknown) => callback(device)
+    ipcRenderer.on('ble:device-found', handler)
+    return () => ipcRenderer.removeListener('ble:device-found', handler)
+  },
+  onData: (callback: (connId: string, data: number[]) => void) => {
+    const handler = (_: unknown, connId: string, data: number[]) => callback(connId, data)
+    ipcRenderer.on('ble:data', handler)
+    return () => ipcRenderer.removeListener('ble:data', handler)
+  },
+  onDisconnect: (callback: (connId: string) => void) => {
+    const handler = (_: unknown, connId: string) => callback(connId)
+    ipcRenderer.on('ble:disconnect', handler)
+    return () => ipcRenderer.removeListener('ble:disconnect', handler)
+  }
+}
+
+// Sync API (Supabase cloud storage)
+const syncAPI = {
+  load: () => ipcRenderer.invoke('sync:load'),
+  save: (settings: unknown) => ipcRenderer.invoke('sync:save', settings),
+  saveAll: () => ipcRenderer.invoke('sync:save-all')
+}
+
+// Session API (communication session persistence)
+const sessionAPI = {
+  save: (data: {
+    sessionName: string
+    connections: { id: string; type: string; label: string; customLabel?: string; config: Record<string, unknown>; encoding: string }[]
+    recentLogs: Record<string, { timestamp: number; direction: string; hex: string; ascii: string }[]>
+  }) => ipcRenderer.invoke('session:save', data),
+  list: () => ipcRenderer.invoke('session:list'),
+  load: (sessionId: string) => ipcRenderer.invoke('session:load', sessionId),
+  delete: (sessionId: string) => ipcRenderer.invoke('session:delete', sessionId),
+  update: (sessionId: string, data: {
+    sessionName?: string
+    connections?: { id: string; type: string; label: string; customLabel?: string; config: Record<string, unknown>; encoding: string }[]
+    recentLogs?: Record<string, { timestamp: number; direction: string; hex: string; ascii: string }[]>
+  }) => ipcRenderer.invoke('session:update', sessionId, data)
 }
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -100,5 +214,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   tcp: tcpAPI,
   udp: udpAPI,
   settings: settingsAPI,
-  auth: authAPI
+  auth: authAPI,
+  llm: llmAPI,
+  ble: bleAPI,
+  sync: syncAPI,
+  session: sessionAPI
 })

@@ -5,7 +5,7 @@ const store = new Store({
   name: 'hw-monitor-settings'
 })
 
-const ENCRYPTED_KEYS = ['anthropicApiKey', 'googleClientId', 'googleClientSecret', 'googleAiKey']
+const ENCRYPTED_KEYS = ['anthropicApiKey', 'googleClientId', 'googleClientSecret', 'googleAiKey', 'openaiApiKey', 'groqApiKey', 'openrouterApiKey', 'supabaseKey']
 
 export function registerSettingsHandlers(): void {
   ipcMain.handle('settings:get', (_, key: string) => {

@@ -8,12 +8,66 @@ import type {
   TcpClientConfig,
   TcpServerConfig,
   UdpConfig,
+  BleConfig,
   ChatMessage,
   AppSettings
 } from '@/types'
 
 function generateId(): string {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36)
+}
+
+// Persistence helpers — save/load connection configs via electron-store
+interface SavedConnection {
+  id: string
+  type: ConnectionType
+  label: string
+  customLabel?: string
+  config: SerialConfig | TcpClientConfig | TcpServerConfig | UdpConfig | BleConfig
+  encoding: DataEncoding
+}
+
+function saveConnectionsToStore(connections: Connection[]) {
+  const saved: SavedConnection[] = connections.map((c) => ({
+    id: c.id,
+    type: c.type,
+    label: c.label,
+    customLabel: c.customLabel,
+    config: c.config,
+    encoding: c.encoding
+  }))
+  // Always save locally for immediate persistence
+  window.electronAPI?.settings?.set('savedConnections', saved)
+  // Also sync to Supabase (fire-and-forget)
+  window.electronAPI?.sync?.save({ connection_configs: saved }).catch(() => {})
+}
+
+export async function loadSavedConnections(): Promise<Connection[]> {
+  try {
+    const raw = await window.electronAPI.settings.get('savedConnections')
+    if (!Array.isArray(raw)) return []
+    return (raw as SavedConnection[]).map((s) => ({
+      id: s.id,
+      type: s.type,
+      label: s.label,
+      customLabel: s.customLabel,
+      status: 'disconnected' as const,
+      config: s.config,
+      data: [],
+      encoding: s.encoding || 'both',
+      autoScroll: true,
+      periodicSend: {
+        active: false,
+        data: '',
+        encoding: 'ascii' as DataEncoding,
+        intervalMs: 1000,
+        count: 0
+      },
+      connectedClients: []
+    }))
+  } catch {
+    return []
+  }
 }
 
 interface ConnectionStore {
@@ -27,6 +81,7 @@ interface ConnectionStore {
   addConnection: (type: ConnectionType) => string
   removeConnection: (id: string) => void
   setActiveConnection: (id: string) => void
+  restoreConnections: (connections: Connection[]) => void
   updateConnectionStatus: (
     id: string,
     status: Connection['status'],
@@ -34,7 +89,7 @@ interface ConnectionStore {
   ) => void
   updateConnectionConfig: (
     id: string,
-    config: Partial<SerialConfig | TcpClientConfig | TcpServerConfig | UdpConfig>
+    config: Partial<SerialConfig | TcpClientConfig | TcpServerConfig | UdpConfig | BleConfig>
   ) => void
   appendData: (
     id: string,
@@ -46,6 +101,7 @@ interface ConnectionStore {
   setEncoding: (id: string, encoding: DataEncoding) => void
   setAutoScroll: (id: string, value: boolean) => void
   setPeriodicSend: (id: string, field: string, value: unknown) => void
+  renameConnection: (id: string, customLabel: string) => void
   addConnectedClient: (id: string, clientAddr: string) => void
   removeConnectedClient: (id: string, clientAddr: string) => void
 
@@ -62,7 +118,12 @@ interface ConnectionStore {
 
 const defaultSettings: AppSettings = {
   anthropicApiKey: '',
-  model: 'claude-3-5-sonnet-20241022',
+  openaiApiKey: '',
+  googleAiKey: '',
+  groqApiKey: '',
+  openrouterApiKey: '',
+  ollamaUrl: 'http://localhost:11434',
+  model: 'groq/llama-3.3-70b-versatile',
   temperature: 0.7,
   maxTokens: 4096,
   defaultBaudRate: 9600,
@@ -97,6 +158,15 @@ const defaultUdpConfig: UdpConfig = {
   targetPort: 9090
 }
 
+const defaultBleConfig: BleConfig = {
+  deviceId: '',
+  deviceName: '',
+  serviceUuid: '',
+  characteristicUuid: '',
+  writeCharacteristicUuid: '',
+  notifyCharacteristicUuid: ''
+}
+
 function createConnection(type: ConnectionType): Connection {
   let config: Connection['config']
   let label: string
@@ -117,6 +187,10 @@ function createConnection(type: ConnectionType): Connection {
     case 'udp':
       config = { ...defaultUdpConfig }
       label = 'UDP'
+      break
+    case 'ble':
+      config = { ...defaultBleConfig }
+      label = 'BLE'
       break
   }
 
@@ -149,16 +223,18 @@ export const useConnectionStore = create<ConnectionStore>((set, get) => ({
 
   addConnection: (type) => {
     const conn = createConnection(type)
-    set((state) => ({
-      connections: [...state.connections, conn],
-      activeConnectionId: conn.id
-    }))
+    set((state) => {
+      const updated = [...state.connections, conn]
+      saveConnectionsToStore(updated)
+      return { connections: updated, activeConnectionId: conn.id }
+    })
     return conn.id
   },
 
   removeConnection: (id) => {
     set((state) => {
       const remaining = state.connections.filter((c) => c.id !== id)
+      saveConnectionsToStore(remaining)
       const newActive =
         state.activeConnectionId === id
           ? remaining.length > 0
@@ -180,17 +256,20 @@ export const useConnectionStore = create<ConnectionStore>((set, get) => ({
   },
 
   updateConnectionConfig: (id, config) => {
-    set((state) => ({
-      connections: state.connections.map((c) =>
+    set((state) => {
+      const updated = state.connections.map((c) =>
         c.id === id ? { ...c, config: { ...c.config, ...config } } : c
       )
-    }))
+      saveConnectionsToStore(updated)
+      return { connections: updated }
+    })
   },
 
   appendData: (id, direction, raw, from) => {
+    const timestamp = Date.now()
     const entry = {
       id: generateId(),
-      timestamp: Date.now(),
+      timestamp,
       direction,
       raw,
       from
@@ -205,6 +284,16 @@ export const useConnectionStore = create<ConnectionStore>((set, get) => ({
           : c
       )
     }))
+
+    // Feed data into RAG store
+    const conn = get().connections.find((c) => c.id === id)
+    if (conn) {
+      window.electronAPI?.llm?.ragAdd?.(
+        { timestamp, direction, raw: Array.from(raw), from },
+        id,
+        conn.type
+      )?.catch(() => {})
+    }
   },
 
   clearData: (id) => {
@@ -232,6 +321,23 @@ export const useConnectionStore = create<ConnectionStore>((set, get) => ({
           ? { ...c, periodicSend: { ...c.periodicSend, [field]: value } }
           : c
       )
+    }))
+  },
+
+  renameConnection: (id, customLabel) => {
+    set((state) => {
+      const updated = state.connections.map((c) =>
+        c.id === id ? { ...c, customLabel: customLabel || undefined } : c
+      )
+      saveConnectionsToStore(updated)
+      return { connections: updated }
+    })
+  },
+
+  restoreConnections: (restored) => {
+    set((state) => ({
+      connections: restored,
+      activeConnectionId: restored.length > 0 ? restored[0].id : state.activeConnectionId
     }))
   },
 

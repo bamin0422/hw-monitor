@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useConnectionStore } from '@/store/connectionStore'
+import { useTranslation } from '@/lib/i18n'
 import type { UdpConfig as Config } from '@/types'
 
 interface Props {
@@ -17,15 +18,17 @@ export function UdpConfig({ connectionId, onBind, onClose, isBound }: Props) {
   const conn = connections.find((c) => c.id === connectionId)
   const config = conn?.config as Config
 
+  const { t } = useTranslation()
+
   const update = (key: keyof Config, value: unknown) =>
     updateConnectionConfig(connectionId, { [key]: value } as Partial<Config>)
 
   return (
     <div className="space-y-3 p-3 bg-card rounded-lg border border-border">
-      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">UDP Socket</span>
+      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('udp.title')}</span>
       <div className="grid grid-cols-3 gap-2">
         <div className="col-span-2">
-          <Label className="text-xs text-muted-foreground">Local Host</Label>
+          <Label className="text-xs text-muted-foreground">{t('udp.localHost')}</Label>
           <Input
             className="h-7 text-xs mt-1"
             value={config?.localHost || ''}
@@ -34,7 +37,7 @@ export function UdpConfig({ connectionId, onBind, onClose, isBound }: Props) {
           />
         </div>
         <div>
-          <Label className="text-xs text-muted-foreground">Local Port</Label>
+          <Label className="text-xs text-muted-foreground">{t('udp.localPort')}</Label>
           <Input
             className="h-7 text-xs mt-1"
             type="number"
@@ -43,7 +46,7 @@ export function UdpConfig({ connectionId, onBind, onClose, isBound }: Props) {
           />
         </div>
         <div className="col-span-2">
-          <Label className="text-xs text-muted-foreground">Target Host</Label>
+          <Label className="text-xs text-muted-foreground">{t('udp.targetHost')}</Label>
           <Input
             className="h-7 text-xs mt-1"
             value={config?.targetHost || ''}
@@ -52,7 +55,7 @@ export function UdpConfig({ connectionId, onBind, onClose, isBound }: Props) {
           />
         </div>
         <div>
-          <Label className="text-xs text-muted-foreground">Target Port</Label>
+          <Label className="text-xs text-muted-foreground">{t('udp.targetPort')}</Label>
           <Input
             className="h-7 text-xs mt-1"
             type="number"
@@ -67,7 +70,7 @@ export function UdpConfig({ connectionId, onBind, onClose, isBound }: Props) {
         onClick={isBound ? onClose : onBind}
       >
         <Plug className="h-3 w-3 mr-1" />
-        {isBound ? 'Close Socket' : 'Bind Socket'}
+        {isBound ? t('udp.closeSocket') : t('udp.bindSocket')}
       </Button>
     </div>
   )

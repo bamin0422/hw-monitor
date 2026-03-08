@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { useConnectionStore } from '@/store/connectionStore'
 import type { Connection, DataEncoding } from '@/types'
 import { cn } from '@/lib/utils'
+import { useTranslation } from '@/lib/i18n'
 
 interface Props {
   connection: Connection
@@ -24,6 +25,7 @@ export function SendPanel({ connection, onSend }: Props) {
   const [eol, setEol] = useState('\n')
   const [sending, setSending] = useState(false)
   const { setPeriodicSend } = useConnectionStore()
+  const { t } = useTranslation()
   const periodicTimer = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const handleSend = useCallback(async () => {
@@ -106,7 +108,7 @@ export function SendPanel({ connection, onSend }: Props) {
       <div className="flex gap-2">
         <Input
           className="flex-1 h-8 text-xs font-mono"
-          placeholder={sendEncoding === 'hex' ? 'AA BB CC DD...' : 'Type message...'}
+          placeholder={sendEncoding === 'hex' ? t('send.hexPlaceholder') : t('send.placeholder')}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -118,7 +120,7 @@ export function SendPanel({ connection, onSend }: Props) {
           disabled={!input.trim() || sending}
         >
           <Send className="h-3 w-3 mr-1" />
-          Send
+          {t('send.send')}
         </Button>
       </div>
 
@@ -127,12 +129,12 @@ export function SendPanel({ connection, onSend }: Props) {
         <Clock className="h-3 w-3 text-muted-foreground" />
         <Input
           className="h-6 w-36 text-xs font-mono"
-          placeholder="Periodic data..."
+          placeholder={t('send.periodicPlaceholder')}
           value={connection.periodicSend.data}
           onChange={(e) => setPeriodicSend(connection.id, 'data', e.target.value)}
           disabled={connection.periodicSend.active}
         />
-        <span className="text-muted-foreground">every</span>
+        <span className="text-muted-foreground">{t('send.every')}</span>
         <Input
           className="h-6 w-20 text-xs"
           type="number"
@@ -140,7 +142,7 @@ export function SendPanel({ connection, onSend }: Props) {
           onChange={(e) => setPeriodicSend(connection.id, 'intervalMs', Number(e.target.value))}
           disabled={connection.periodicSend.active}
         />
-        <span className="text-muted-foreground">ms</span>
+        <span className="text-muted-foreground">{t('send.ms')}</span>
         <Button
           size="sm"
           variant={connection.periodicSend.active ? 'destructive' : 'outline'}
@@ -148,8 +150,8 @@ export function SendPanel({ connection, onSend }: Props) {
           onClick={togglePeriodic}
         >
           {connection.periodicSend.active ? (
-            <><Square className="h-2 w-2 mr-1" />Stop ({connection.periodicSend.count})</>
-          ) : 'Start'}
+            <><Square className="h-2 w-2 mr-1" />{t('send.stop')} ({connection.periodicSend.count})</>
+          ) : t('send.start')}
         </Button>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Settings, LogOut, LogIn, Loader2, User } from 'lucide-react'
+import { Settings, LogOut, User, Check, ChevronDown, ChevronUp, Key, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,121 +11,123 @@ import {
   DialogTrigger,
   DialogFooter
 } from '@/components/ui/dialog'
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
 import { useConnectionStore } from '@/store/connectionStore'
 import { useAuthStore } from '@/store/authStore'
+import { useTranslation } from '@/lib/i18n'
+import { PROVIDER_URLS } from '@/lib/models'
 
-interface ModelInfo {
-  id: string
-  name: string
-  provider: 'anthropic' | 'google'
-  description: string
+function ProviderBadge({ provider }: { provider: string }) {
+  const colors: Record<string, string> = {
+    ollama: 'bg-orange-500/20 text-orange-400',
+    groq: 'bg-purple-500/20 text-purple-400',
+    openrouter: 'bg-cyan-500/20 text-cyan-400',
+    anthropic: 'bg-primary/20 text-primary',
+    google: 'bg-blue-500/20 text-blue-400',
+    openai: 'bg-emerald-500/20 text-emerald-400'
+  }
+  const labels: Record<string, string> = {
+    ollama: 'OL',
+    groq: 'GQ',
+    openrouter: 'OR',
+    anthropic: 'A',
+    google: 'G',
+    openai: 'O'
+  }
+  return (
+    <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${colors[provider] || ''}`}>
+      {labels[provider] || '?'}
+    </span>
+  )
 }
-
-const ANTHROPIC_MODELS: ModelInfo[] = [
-  { id: 'claude-sonnet-4-20250514',   name: 'Claude Sonnet 4',    provider: 'anthropic', description: '최신 고성능 · 200K 컨텍스트' },
-  { id: 'claude-opus-4-20250514',     name: 'Claude Opus 4',      provider: 'anthropic', description: '최고 성능 · 복잡한 추론' },
-  { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet',  provider: 'anthropic', description: '빠르고 균형 잡힌 성능' },
-  { id: 'claude-3-5-haiku-20241022',  name: 'Claude 3.5 Haiku',   provider: 'anthropic', description: '초고속 · 경량 작업' }
-]
-
-const GOOGLE_MODELS: ModelInfo[] = [
-  { id: 'gemini-2.0-flash-exp',       name: 'Gemini 2.0 Flash',   provider: 'google',    description: '빠르고 효율적 · 멀티모달' },
-  { id: 'gemini-1.5-pro',             name: 'Gemini 1.5 Pro',     provider: 'google',    description: '긴 컨텍스트 · 고성능' }
-]
 
 export function SettingsModal() {
   const { settings, updateSettings } = useConnectionStore()
   const { user, setUser } = useAuthStore()
+  const { t } = useTranslation()
 
   const [open, setOpen] = useState(false)
   const [apiKey, setApiKey] = useState('')
   const [googleAiKey, setGoogleAiKey] = useState('')
-  const [googleClientId, setGoogleClientId] = useState('')
-  const [googleClientSecret, setGoogleClientSecret] = useState('')
-  const [model, setModel] = useState(settings.model)
+  const [openaiApiKey, setOpenaiApiKey] = useState('')
+  const [groqApiKey, setGroqApiKey] = useState('')
+  const [openrouterApiKey, setOpenrouterApiKey] = useState('')
+  const [ollamaUrl, setOllamaUrl] = useState(settings.ollamaUrl || 'http://localhost:11434')
   const [temperature, setTemperature] = useState(String(settings.temperature))
   const [maxTokens, setMaxTokens] = useState(String(settings.maxTokens))
-  const [isSigningIn, setIsSigningIn] = useState(false)
-  const [authError, setAuthError] = useState('')
+  const [expandedProvider, setExpandedProvider] = useState<string | null>(null)
 
+  const hasAnthropicKey = apiKey.trim().length > 0
   const hasGoogleAiKey = googleAiKey.trim().length > 0
-  const allModels = hasGoogleAiKey ? [...ANTHROPIC_MODELS, ...GOOGLE_MODELS] : ANTHROPIC_MODELS
-  const selectedModelInfo = allModels.find((m) => m.id === model)
+  const hasOpenaiKey = openaiApiKey.trim().length > 0
+  const hasGroqKey = groqApiKey.trim().length > 0
+  const hasOpenrouterKey = openrouterApiKey.trim().length > 0
 
   useEffect(() => {
     if (!open) return
     Promise.all([
       window.electronAPI.settings.get('anthropicApiKey'),
       window.electronAPI.settings.get('googleAiKey'),
-      window.electronAPI.settings.get('googleClientId'),
-      window.electronAPI.settings.get('googleClientSecret')
-    ]).then(([key, gKey, gId, gSec]) => {
+      window.electronAPI.settings.get('openaiApiKey'),
+      window.electronAPI.settings.get('groqApiKey'),
+      window.electronAPI.settings.get('openrouterApiKey'),
+      window.electronAPI.settings.get('ollamaUrl')
+    ]).then(([key, gKey, oKey, grKey, orKey, olUrl]) => {
       if (key) setApiKey(key as string)
       if (gKey) setGoogleAiKey(gKey as string)
-      if (gId) setGoogleClientId(gId as string)
-      if (gSec) setGoogleClientSecret(gSec as string)
+      if (oKey) setOpenaiApiKey(oKey as string)
+      if (grKey) setGroqApiKey(grKey as string)
+      if (orKey) setOpenrouterApiKey(orKey as string)
+      if (olUrl) setOllamaUrl(olUrl as string)
     })
-    setModel(settings.model)
     setTemperature(String(settings.temperature))
     setMaxTokens(String(settings.maxTokens))
-    setAuthError('')
+    setExpandedProvider(null)
   }, [open, settings])
 
   const handleSave = async () => {
-    await Promise.all([
-      apiKey && window.electronAPI.settings.set('anthropicApiKey', apiKey),
-      window.electronAPI.settings.set('googleAiKey', googleAiKey),
-      googleClientId && window.electronAPI.settings.set('googleClientId', googleClientId),
-      googleClientSecret && window.electronAPI.settings.set('googleClientSecret', googleClientSecret),
-      window.electronAPI.settings.set('model', model),
-      window.electronAPI.settings.set('temperature', Number(temperature)),
-      window.electronAPI.settings.set('maxTokens', Number(maxTokens))
-    ])
+    // Save to Supabase (primary) — also caches to electron-store locally
+    await window.electronAPI.sync.save({
+      api_keys: {
+        anthropicApiKey: apiKey,
+        openaiApiKey,
+        googleAiKey,
+        groqApiKey,
+        openrouterApiKey
+      },
+      preferences: {
+        ollamaUrl,
+        temperature: Number(temperature),
+        maxTokens: Number(maxTokens)
+      }
+    })
+
+    // Update in-memory store
     updateSettings({
       anthropicApiKey: apiKey,
-      model,
+      openaiApiKey: openaiApiKey,
+      googleAiKey: googleAiKey,
+      groqApiKey: groqApiKey,
+      openrouterApiKey: openrouterApiKey,
+      ollamaUrl: ollamaUrl,
       temperature: Number(temperature),
       maxTokens: Number(maxTokens)
     })
-    setOpen(false)
-  }
 
-  const handleGoogleLogin = async () => {
-    if (!googleClientId || !googleClientSecret) {
-      setAuthError('Client ID와 Secret을 입력해주세요.')
-      return
-    }
-    setIsSigningIn(true)
-    setAuthError('')
-    try {
-      const result = await window.electronAPI.auth.googleLogin(googleClientId, googleClientSecret)
-      if (result.success && result.user) {
-        setUser(result.user as GoogleUserInfo)
-      } else {
-        setAuthError(result.error ?? '로그인 실패')
-      }
-    } catch (err) {
-      setAuthError(String(err))
-    } finally {
-      setIsSigningIn(false)
-    }
+    setOpen(false)
   }
 
   const handleGoogleLogout = async () => {
     await window.electronAPI.auth.logout()
     setUser(null)
-    if (GOOGLE_MODELS.some((m) => m.id === model)) {
-      setModel(ANTHROPIC_MODELS[0].id)
-    }
+  }
+
+  const openProviderConsole = (provider: string) => {
+    const url = PROVIDER_URLS[provider]
+    if (url) window.open(url, '_blank')
+  }
+
+  const toggleProvider = (provider: string) => {
+    setExpandedProvider(expandedProvider === provider ? null : provider)
   }
 
   return (
@@ -135,156 +137,379 @@ export function SettingsModal() {
           <Settings className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[440px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[460px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-sm font-semibold">설정</DialogTitle>
+          <DialogTitle className="text-sm font-semibold">{t('settings.title')}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 py-1">
+        <div className="space-y-5 py-1">
 
-          {/* ── Anthropic ── */}
-          <section className="space-y-2">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Anthropic</p>
-            <div>
-              <Label className="text-xs">API Key</Label>
-              <Input
-                type="password"
-                className="mt-1 font-mono text-xs h-8"
-                placeholder="sk-ant-..."
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-              />
-              <p className="text-[11px] text-muted-foreground mt-1">OS 키체인에 암호화 저장</p>
+          {/* ── Account ── */}
+          <section className="space-y-3">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
+              {t('settings.account')}
+            </p>
+
+            <div className="rounded-lg border border-border bg-card/60 p-3">
+              {user ? (
+                <div className="flex items-center gap-2 p-2 rounded-md bg-secondary/40 border border-border/50">
+                  {user.picture ? (
+                    <img src={user.picture} alt={user.name} className="w-8 h-8 rounded-full shrink-0" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                      <User className="h-4 w-4" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium truncate">{user.name}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{user.email}</p>
+                  </div>
+                  <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1 shrink-0" onClick={handleGoogleLogout}>
+                    <LogOut className="h-3 w-3" />
+                    {t('settings.logout')}
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground text-center py-2">{t('settings.notConfigured')}</p>
+              )}
             </div>
           </section>
 
-          {/* ── Google ── */}
-          <section className="space-y-2">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Google</p>
+          {/* ── Free Providers ── */}
+          <section className="space-y-3">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
+              {t('settings.freeProviders')}
+            </p>
 
-            {/* Sign-In */}
-            {user ? (
-              <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-secondary/40 border border-border">
-                {user.picture ? (
-                  <img src={user.picture} alt={user.name} className="w-7 h-7 rounded-full shrink-0" />
-                ) : (
-                  <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center shrink-0">
-                    <User className="h-3.5 w-3.5" />
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium truncate">{user.name}</p>
-                  <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
+            {/* Ollama card */}
+            <div className="rounded-lg border border-border bg-card/60 p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ProviderBadge provider="ollama" />
+                  <span className="text-xs font-medium">Ollama</span>
+                  <span className="text-[9px] px-1 py-0 rounded bg-yellow-500/15 text-yellow-400 font-medium">{t('settings.free')}</span>
                 </div>
-                <Button variant="ghost" size="sm" className="h-6 text-xs gap-1 shrink-0" onClick={handleGoogleLogout}>
-                  <LogOut className="h-3 w-3" />
-                  로그아웃
-                </Button>
+                <span className="text-[10px] text-muted-foreground">{t('settings.noKeyNeeded')}</span>
               </div>
-            ) : (
-              <div className="space-y-2">
-                <div>
-                  <Label className="text-xs">OAuth Client ID</Label>
+
+              <Button
+                variant={expandedProvider === 'ollama' ? 'secondary' : 'outline'}
+                size="sm"
+                className="h-7 gap-1 text-[11px] w-full"
+                onClick={() => toggleProvider('ollama')}
+              >
+                <Settings className="h-3 w-3" />
+                {t('settings.ollamaSettings')}
+                {expandedProvider === 'ollama' ? <ChevronUp className="h-3 w-3 ml-auto" /> : <ChevronDown className="h-3 w-3 ml-auto" />}
+              </Button>
+
+              {expandedProvider === 'ollama' && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs">{t('settings.ollamaUrl')}</Label>
                   <Input
-                    type="password"
-                    className="mt-1 font-mono text-xs h-8"
-                    placeholder="123456.apps.googleusercontent.com"
-                    value={googleClientId}
-                    onChange={(e) => setGoogleClientId(e.target.value)}
+                    className="font-mono text-xs h-8"
+                    placeholder="http://localhost:11434"
+                    value={ollamaUrl}
+                    onChange={(e) => setOllamaUrl(e.target.value)}
                   />
+                  <p className="text-[10px] text-muted-foreground">{t('settings.ollamaDesc')}</p>
                 </div>
-                <div>
-                  <Label className="text-xs">OAuth Client Secret</Label>
-                  <Input
-                    type="password"
-                    className="mt-1 font-mono text-xs h-8"
-                    placeholder="GOCSPX-..."
-                    value={googleClientSecret}
-                    onChange={(e) => setGoogleClientSecret(e.target.value)}
-                  />
+              )}
+            </div>
+
+            {/* Groq card */}
+            <div className="rounded-lg border border-border bg-card/60 p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ProviderBadge provider="groq" />
+                  <span className="text-xs font-medium">Groq</span>
+                  <span className="text-[9px] px-1 py-0 rounded bg-yellow-500/15 text-yellow-400 font-medium">{t('settings.free')}</span>
                 </div>
-                {authError && <p className="text-xs text-destructive">{authError}</p>}
+                <div className="flex items-center gap-2">
+                  {hasGroqKey ? (
+                    <span className="flex items-center gap-1 text-[10px] text-purple-400">
+                      <Check className="h-3 w-3" />
+                      {t('settings.configured')}
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground">{t('settings.notConfigured')}</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full h-8 gap-2 text-xs"
-                  onClick={handleGoogleLogin}
-                  disabled={isSigningIn}
+                  className="h-7 gap-1.5 text-[11px] flex-1"
+                  onClick={() => openProviderConsole('groq')}
                 >
-                  {isSigningIn
-                    ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />브라우저에서 인증 중...</>
-                    : <><LogIn className="h-3.5 w-3.5" />Google로 로그인</>}
+                  <ExternalLink className="h-3 w-3" />
+                  {t('settings.getFreeKey')}
                 </Button>
-                <p className="text-[11px] text-muted-foreground">
-                  Google Cloud Console → OAuth 2.0 → 데스크톱 앱 유형
-                </p>
+                <Button
+                  variant={expandedProvider === 'groq' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className="h-7 gap-1 text-[11px]"
+                  onClick={() => toggleProvider('groq')}
+                >
+                  <Key className="h-3 w-3" />
+                  {expandedProvider === 'groq' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                </Button>
               </div>
-            )}
 
-            {/* Google AI API Key for Gemini */}
-            <div className="pt-1">
-              <Label className="text-xs">Google AI API Key <span className="text-muted-foreground font-normal">(Gemini 사용 시)</span></Label>
-              <Input
-                type="password"
-                className="mt-1 font-mono text-xs h-8"
-                placeholder="AI Studio에서 발급 — aistudio.google.com"
-                value={googleAiKey}
-                onChange={(e) => setGoogleAiKey(e.target.value)}
-              />
+              {expandedProvider === 'groq' && (
+                <div className="space-y-1.5">
+                  <Input
+                    type="password"
+                    className="font-mono text-xs h-8"
+                    placeholder="gsk_..."
+                    value={groqApiKey}
+                    onChange={(e) => setGroqApiKey(e.target.value)}
+                  />
+                  <p className="text-[10px] text-muted-foreground">{t('settings.groqDesc')}</p>
+                </div>
+              )}
+            </div>
+
+            {/* OpenRouter card */}
+            <div className="rounded-lg border border-border bg-card/60 p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ProviderBadge provider="openrouter" />
+                  <span className="text-xs font-medium">OpenRouter</span>
+                  <span className="text-[9px] px-1 py-0 rounded bg-yellow-500/15 text-yellow-400 font-medium">{t('settings.free')}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {hasOpenrouterKey ? (
+                    <span className="flex items-center gap-1 text-[10px] text-cyan-400">
+                      <Check className="h-3 w-3" />
+                      {t('settings.configured')}
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground">{t('settings.notConfigured')}</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1.5 text-[11px] flex-1"
+                  onClick={() => openProviderConsole('openrouter')}
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  {t('settings.getFreeKey')}
+                </Button>
+                <Button
+                  variant={expandedProvider === 'openrouter' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className="h-7 gap-1 text-[11px]"
+                  onClick={() => toggleProvider('openrouter')}
+                >
+                  <Key className="h-3 w-3" />
+                  {expandedProvider === 'openrouter' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                </Button>
+              </div>
+
+              {expandedProvider === 'openrouter' && (
+                <div className="space-y-1.5">
+                  <Input
+                    type="password"
+                    className="font-mono text-xs h-8"
+                    placeholder="sk-or-..."
+                    value={openrouterApiKey}
+                    onChange={(e) => setOpenrouterApiKey(e.target.value)}
+                  />
+                  <p className="text-[10px] text-muted-foreground">{t('settings.openrouterDesc')}</p>
+                </div>
+              )}
             </div>
           </section>
 
-          {/* ── Model ── */}
-          <section className="space-y-2">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">LLM 모델</p>
-            <Select value={model} onValueChange={setModel}>
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue>
-                  {selectedModelInfo && (
-                    <span className="flex items-center gap-1.5">
-                      <span className={`text-[10px] px-1 py-0.5 rounded font-semibold ${
-                        selectedModelInfo.provider === 'google'
-                          ? 'bg-blue-500/20 text-blue-400'
-                          : 'bg-primary/20 text-primary'
-                      }`}>
-                        {selectedModelInfo.provider === 'google' ? 'G' : 'A'}
-                      </span>
-                      {selectedModelInfo.name}
+          {/* ── Premium Provider Keys ── */}
+          <section className="space-y-3">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
+              {t('settings.premiumProviders')}
+            </p>
+
+            {/* Anthropic card */}
+            <div className="rounded-lg border border-border bg-card/60 p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ProviderBadge provider="anthropic" />
+                  <span className="text-xs font-medium">Anthropic</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {hasAnthropicKey ? (
+                    <span className="flex items-center gap-1 text-[10px] text-primary">
+                      <Check className="h-3 w-3" />
+                      {t('settings.configured')}
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground">{t('settings.notConfigured')}</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1.5 text-[11px] flex-1"
+                  onClick={() => openProviderConsole('anthropic')}
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  {t('settings.getApiKey')}
+                </Button>
+                <Button
+                  variant={expandedProvider === 'anthropic' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className="h-7 gap-1 text-[11px]"
+                  onClick={() => toggleProvider('anthropic')}
+                >
+                  <Key className="h-3 w-3" />
+                  {expandedProvider === 'anthropic' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                </Button>
+              </div>
+
+              {expandedProvider === 'anthropic' && (
+                <div className="space-y-1.5">
+                  <Input
+                    type="password"
+                    className="font-mono text-xs h-8"
+                    placeholder="sk-ant-..."
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                  />
+                  <p className="text-[10px] text-muted-foreground">{t('settings.encryptedStorage')}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Google card */}
+            <div className="rounded-lg border border-border bg-card/60 p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ProviderBadge provider="google" />
+                  <span className="text-xs font-medium">Google</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {hasGoogleAiKey && (
+                    <span className="flex items-center gap-1 text-[10px] text-blue-400">
+                      <Check className="h-3 w-3" />
+                      API
                     </span>
                   )}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel className="text-[11px] text-muted-foreground">Anthropic Claude</SelectLabel>
-                  {ANTHROPIC_MODELS.map((m) => (
-                    <SelectItem key={m.id} value={m.id} className="text-xs">
-                      <span className="font-medium">{m.name}</span>
-                      <span className="ml-2 text-muted-foreground text-[11px]">{m.description}</span>
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-                {hasGoogleAiKey && (
-                  <SelectGroup>
-                    <SelectLabel className="text-[11px] text-muted-foreground">Google Gemini</SelectLabel>
-                    {GOOGLE_MODELS.map((m) => (
-                      <SelectItem key={m.id} value={m.id} className="text-xs">
-                        <span className="font-medium">{m.name}</span>
-                        <span className="ml-2 text-muted-foreground text-[11px]">{m.description}</span>
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                )}
-              </SelectContent>
-            </Select>
-            {selectedModelInfo && (
-              <p className="text-[11px] text-muted-foreground">{selectedModelInfo.description}</p>
-            )}
+                  {user && (
+                    <span className="flex items-center gap-1 text-[10px] text-blue-400">
+                      <Check className="h-3 w-3" />
+                      OAuth
+                    </span>
+                  )}
+                  {!hasGoogleAiKey && !user && (
+                    <span className="text-[10px] text-muted-foreground">{t('settings.notConfigured')}</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1.5 text-[11px] flex-1"
+                  onClick={() => openProviderConsole('google')}
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  {t('settings.getApiKey')}
+                </Button>
+                <Button
+                  variant={expandedProvider === 'google' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className="h-7 gap-1 text-[11px]"
+                  onClick={() => toggleProvider('google')}
+                >
+                  <Key className="h-3 w-3" />
+                  {expandedProvider === 'google' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                </Button>
+              </div>
+
+              {expandedProvider === 'google' && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs">
+                    AI API Key <span className="text-muted-foreground font-normal">{t('settings.geminiLabel')}</span>
+                  </Label>
+                  <Input
+                    type="password"
+                    className="font-mono text-xs h-8"
+                    placeholder={t('settings.googleAiKeyPlaceholder')}
+                    value={googleAiKey}
+                    onChange={(e) => setGoogleAiKey(e.target.value)}
+                  />
+                  <p className="text-[10px] text-muted-foreground">{t('settings.encryptedStorage')}</p>
+                </div>
+              )}
+            </div>
+
+            {/* OpenAI card */}
+            <div className="rounded-lg border border-border bg-card/60 p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ProviderBadge provider="openai" />
+                  <span className="text-xs font-medium">OpenAI</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {hasOpenaiKey ? (
+                    <span className="flex items-center gap-1 text-[10px] text-emerald-400">
+                      <Check className="h-3 w-3" />
+                      {t('settings.configured')}
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground">{t('settings.notConfigured')}</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1.5 text-[11px] flex-1"
+                  onClick={() => openProviderConsole('openai')}
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  {t('settings.getApiKey')}
+                </Button>
+                <Button
+                  variant={expandedProvider === 'openai' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className="h-7 gap-1 text-[11px]"
+                  onClick={() => toggleProvider('openai')}
+                >
+                  <Key className="h-3 w-3" />
+                  {expandedProvider === 'openai' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                </Button>
+              </div>
+
+              {expandedProvider === 'openai' && (
+                <div className="space-y-1.5">
+                  <Input
+                    type="password"
+                    className="font-mono text-xs h-8"
+                    placeholder={t('settings.openaiKeyPlaceholder')}
+                    value={openaiApiKey}
+                    onChange={(e) => setOpenaiApiKey(e.target.value)}
+                  />
+                  <p className="text-[10px] text-muted-foreground">{t('settings.encryptedStorage')}</p>
+                </div>
+              )}
+            </div>
           </section>
 
           {/* ── Parameters ── */}
           <section className="space-y-2">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">파라미터</p>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">{t('settings.parameters')}</p>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs">Temperature</Label>
@@ -297,7 +522,7 @@ export function SettingsModal() {
                   value={temperature}
                   onChange={(e) => setTemperature(e.target.value)}
                 />
-                <p className="text-[11px] text-muted-foreground mt-0.5">0.0 – 1.0</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">0.0 – 1.0</p>
               </div>
               <div>
                 <Label className="text-xs">Max Tokens</Label>
@@ -309,15 +534,15 @@ export function SettingsModal() {
                   value={maxTokens}
                   onChange={(e) => setMaxTokens(e.target.value)}
                 />
-                <p className="text-[11px] text-muted-foreground mt-0.5">256 – 8192</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">256 – 8192</p>
               </div>
             </div>
           </section>
         </div>
 
         <DialogFooter className="gap-2">
-          <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>취소</Button>
-          <Button size="sm" onClick={handleSave}>저장</Button>
+          <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>{t('settings.cancel')}</Button>
+          <Button size="sm" onClick={handleSave}>{t('settings.save')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

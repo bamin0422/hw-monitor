@@ -5,6 +5,9 @@ import { registerTcpHandlers } from './ipc/tcp'
 import { registerUdpHandlers } from './ipc/udp'
 import { registerSettingsHandlers } from './ipc/settings'
 import { registerAuthHandlers } from './ipc/auth'
+import { registerLLMHandlers } from './ipc/llm'
+import { registerBleHandlers } from './ipc/ble'
+import { registerSyncHandlers } from './ipc/supabase-sync'
 
 const isDev = process.env.NODE_ENV === 'development'
 
@@ -44,12 +47,25 @@ function createWindow(): void {
 app.whenReady().then(() => {
   app.setAppUserModelId('com.hwmonitor')
 
-  // Register IPC handlers
-  registerSerialHandlers()
-  registerTcpHandlers()
-  registerUdpHandlers()
-  registerSettingsHandlers()
-  registerAuthHandlers()
+  // Register IPC handlers (isolated so one failure doesn't block others)
+  const handlers = [
+    ['Serial', registerSerialHandlers],
+    ['TCP', registerTcpHandlers],
+    ['UDP', registerUdpHandlers],
+    ['Settings', registerSettingsHandlers],
+    ['Auth', registerAuthHandlers],
+    ['LLM', registerLLMHandlers],
+    ['BLE', registerBleHandlers],
+    ['Sync', registerSyncHandlers]
+  ] as const
+
+  for (const [name, register] of handlers) {
+    try {
+      register()
+    } catch (err) {
+      console.error(`[IPC] Failed to register ${name} handlers:`, err)
+    }
+  }
 
   createWindow()
 

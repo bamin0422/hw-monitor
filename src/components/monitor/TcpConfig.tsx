@@ -11,6 +11,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { useConnectionStore } from '@/store/connectionStore'
+import { useTranslation } from '@/lib/i18n'
 import type { TcpClientConfig, TcpServerConfig, ConnectionType } from '@/types'
 
 interface Props {
@@ -25,6 +26,8 @@ export function TcpConfig({ connectionId, connectionType, onConnect, onDisconnec
   const { connections, updateConnectionConfig } = useConnectionStore()
   const conn = connections.find((c) => c.id === connectionId)
 
+  const { t } = useTranslation()
+
   if (connectionType === 'tcp-client') {
     const config = conn?.config as TcpClientConfig
     const update = (key: keyof TcpClientConfig, value: unknown) =>
@@ -32,10 +35,10 @@ export function TcpConfig({ connectionId, connectionType, onConnect, onDisconnec
 
     return (
       <div className="space-y-3 p-3 bg-card rounded-lg border border-border">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">TCP Client</span>
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('tcp.client')}</span>
         <div className="grid grid-cols-3 gap-2">
           <div className="col-span-2">
-            <Label className="text-xs text-muted-foreground">Host</Label>
+            <Label className="text-xs text-muted-foreground">{t('tcp.host')}</Label>
             <Input
               className="h-7 text-xs mt-1"
               value={config?.host || ''}
@@ -44,7 +47,7 @@ export function TcpConfig({ connectionId, connectionType, onConnect, onDisconnec
             />
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground">Port</Label>
+            <Label className="text-xs text-muted-foreground">{t('tcp.port')}</Label>
             <Input
               className="h-7 text-xs mt-1"
               type="number"
@@ -59,7 +62,7 @@ export function TcpConfig({ connectionId, connectionType, onConnect, onDisconnec
           onClick={isConnected ? onDisconnect : onConnect}
         >
           <Plug className="h-3 w-3 mr-1" />
-          {isConnected ? 'Disconnect' : 'Connect'}
+          {isConnected ? t('tcp.disconnect') : t('tcp.connect')}
         </Button>
       </div>
     )
@@ -72,10 +75,10 @@ export function TcpConfig({ connectionId, connectionType, onConnect, onDisconnec
 
   return (
     <div className="space-y-3 p-3 bg-card rounded-lg border border-border">
-      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">TCP Server</span>
+      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('tcp.server')}</span>
       <div className="grid grid-cols-3 gap-2">
         <div className="col-span-2">
-          <Label className="text-xs text-muted-foreground">Bind Address</Label>
+          <Label className="text-xs text-muted-foreground">{t('tcp.bindAddress')}</Label>
           <Input
             className="h-7 text-xs mt-1"
             value={config?.host || ''}
@@ -84,7 +87,7 @@ export function TcpConfig({ connectionId, connectionType, onConnect, onDisconnec
           />
         </div>
         <div>
-          <Label className="text-xs text-muted-foreground">Port</Label>
+          <Label className="text-xs text-muted-foreground">{t('tcp.port')}</Label>
           <Input
             className="h-7 text-xs mt-1"
             type="number"
@@ -99,7 +102,7 @@ export function TcpConfig({ connectionId, connectionType, onConnect, onDisconnec
         onClick={isConnected ? onDisconnect : onConnect}
       >
         <Plug className="h-3 w-3 mr-1" />
-        {isConnected ? 'Stop Server' : 'Start Server'}
+        {isConnected ? t('tcp.stopServer') : t('tcp.startServer')}
       </Button>
     </div>
   )

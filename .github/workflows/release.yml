@@ -39,7 +39,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
 
       - name: Install Linux dependencies
         if: matrix.platform == 'linux'
@@ -50,6 +49,9 @@ jobs:
       - name: Install Windows build tools
         if: matrix.platform == 'win'
         run: npm install --global windows-build-tools node-gyp@latest || true
+
+      - name: Clean lock file for cross-platform builds
+        run: rm -f package-lock.json
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund

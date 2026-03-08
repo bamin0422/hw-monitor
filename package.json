@@ -1,6 +1,6 @@
 {
   "name": "hw-monitor",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Hardware Communication Monitoring Tool with LLM Chat",
   "main": "./out/main/index.js",
   "author": "mindaein",

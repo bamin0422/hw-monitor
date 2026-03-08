@@ -37,6 +37,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "electron-store": "^8.2.0",
+    "electron-updater": "^6.8.3",
     "langchain": "^1.2.30",
     "lucide-react": "^0.475.0",
     "react": "^18.3.1",
@@ -72,11 +73,19 @@
       "out/**/*"
     ],
     "asar": true,
+    "publish": {
+      "provider": "github",
+      "owner": "bamin0422",
+      "repo": "hw-monitor"
+    },
     "mac": {
       "target": [
         {
           "target": "dmg",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ],
       "category": "public.app-category.developer-tools",
@@ -86,7 +95,9 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ]
     },
@@ -98,7 +109,9 @@
       "target": [
         {
           "target": "AppImage",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "category": "Development"

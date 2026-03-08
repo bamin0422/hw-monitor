@@ -8,10 +8,11 @@ import { registerAuthHandlers } from './ipc/auth'
 import { registerLLMHandlers } from './ipc/llm'
 import { registerBleHandlers } from './ipc/ble'
 import { registerSyncHandlers } from './ipc/supabase-sync'
+import { registerUpdaterHandlers } from './ipc/updater'
 
 const isDev = process.env.NODE_ENV === 'development'
 
-function createWindow(): void {
+function createWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
@@ -42,6 +43,8 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  return mainWindow
 }
 
 app.whenReady().then(() => {
@@ -67,7 +70,16 @@ app.whenReady().then(() => {
     }
   }
 
-  createWindow()
+  const mainWindow = createWindow()
+
+  // Register updater (needs window reference for IPC events)
+  if (!isDev) {
+    try {
+      registerUpdaterHandlers(mainWindow)
+    } catch (err) {
+      console.error('[IPC] Failed to register Updater handlers:', err)
+    }
+  }
 
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

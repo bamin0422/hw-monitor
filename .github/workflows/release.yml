@@ -51,6 +51,7 @@ jobs:
         run: npm install --global windows-build-tools node-gyp@latest || true
 
       - name: Clean lock file for cross-platform builds
+        shell: bash
         run: rm -f package-lock.json
 
       - name: Install dependencies

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { formatTimestamp, bufferToHex, bufferToAscii } from '@/lib/utils'
+import { useTranslation } from '@/lib/i18n'
 import type { DataEntry, DataEncoding } from '@/types'
 
 interface Props {
@@ -56,10 +57,12 @@ export function DataDisplay({ data, encoding, autoScroll }: Props) {
     }
   }, [data, autoScroll])
 
+  const { t } = useTranslation()
+
   if (data.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center text-muted-foreground text-xs">
-        No data yet. Connect and start communicating.
+        {t('data.noData')}
       </div>
     )
   }

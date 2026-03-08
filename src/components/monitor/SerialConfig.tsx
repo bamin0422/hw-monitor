@@ -10,6 +10,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { useConnectionStore } from '@/store/connectionStore'
+import { useTranslation } from '@/lib/i18n'
 import type { SerialConfig as Config, PortInfo } from '@/types'
 
 interface Props {
@@ -36,6 +37,8 @@ export function SerialConfig({ connectionId, onConnect, onDisconnect, isConnecte
     refreshPorts()
   }, [])
 
+  const { t } = useTranslation()
+
   const update = (key: keyof Config, value: unknown) => {
     updateConnectionConfig(connectionId, { [key]: value } as Partial<Config>)
   }
@@ -43,7 +46,7 @@ export function SerialConfig({ connectionId, onConnect, onDisconnect, isConnecte
   return (
     <div className="space-y-3 p-3 bg-card rounded-lg border border-border">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Serial Config</span>
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('serial.title')}</span>
         <Select value={config?.label} onValueChange={(v) => update('label', v)}>
           <SelectTrigger className="h-6 w-24 text-xs">
             <SelectValue />
@@ -58,11 +61,11 @@ export function SerialConfig({ connectionId, onConnect, onDisconnect, isConnecte
 
       <div className="grid grid-cols-2 gap-2">
         <div className="col-span-2">
-          <Label className="text-xs text-muted-foreground">Port</Label>
+          <Label className="text-xs text-muted-foreground">{t('serial.port')}</Label>
           <div className="flex gap-1 mt-1">
             <Select value={config?.path} onValueChange={(v) => update('path', v)}>
               <SelectTrigger className="h-7 text-xs flex-1">
-                <SelectValue placeholder="Select port..." />
+                <SelectValue placeholder={t('serial.selectPort')} />
               </SelectTrigger>
               <SelectContent>
                 {ports.map((p) => (
@@ -79,7 +82,7 @@ export function SerialConfig({ connectionId, onConnect, onDisconnect, isConnecte
         </div>
 
         <div>
-          <Label className="text-xs text-muted-foreground">Baud Rate</Label>
+          <Label className="text-xs text-muted-foreground">{t('serial.baudRate')}</Label>
           <Select
             value={String(config?.baudRate)}
             onValueChange={(v) => update('baudRate', Number(v))}
@@ -98,7 +101,7 @@ export function SerialConfig({ connectionId, onConnect, onDisconnect, isConnecte
         </div>
 
         <div>
-          <Label className="text-xs text-muted-foreground">Data Bits</Label>
+          <Label className="text-xs text-muted-foreground">{t('serial.dataBits')}</Label>
           <Select
             value={String(config?.dataBits)}
             onValueChange={(v) => update('dataBits', Number(v))}
@@ -115,7 +118,7 @@ export function SerialConfig({ connectionId, onConnect, onDisconnect, isConnecte
         </div>
 
         <div>
-          <Label className="text-xs text-muted-foreground">Stop Bits</Label>
+          <Label className="text-xs text-muted-foreground">{t('serial.stopBits')}</Label>
           <Select
             value={String(config?.stopBits)}
             onValueChange={(v) => update('stopBits', Number(v))}
@@ -132,7 +135,7 @@ export function SerialConfig({ connectionId, onConnect, onDisconnect, isConnecte
         </div>
 
         <div>
-          <Label className="text-xs text-muted-foreground">Parity</Label>
+          <Label className="text-xs text-muted-foreground">{t('serial.parity')}</Label>
           <Select value={config?.parity} onValueChange={(v) => update('parity', v)}>
             <SelectTrigger className="h-7 text-xs mt-1">
               <SelectValue />
@@ -146,15 +149,15 @@ export function SerialConfig({ connectionId, onConnect, onDisconnect, isConnecte
         </div>
 
         <div className="col-span-2">
-          <Label className="text-xs text-muted-foreground">Flow Control</Label>
+          <Label className="text-xs text-muted-foreground">{t('serial.flowControl')}</Label>
           <Select value={config?.flowControl} onValueChange={(v) => update('flowControl', v)}>
             <SelectTrigger className="h-7 text-xs mt-1">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">None</SelectItem>
-              <SelectItem value="hardware">Hardware (RTS/CTS)</SelectItem>
-              <SelectItem value="software">Software (XON/XOFF)</SelectItem>
+              <SelectItem value="none">{t('serial.flowNone')}</SelectItem>
+              <SelectItem value="hardware">{t('serial.flowHardware')}</SelectItem>
+              <SelectItem value="software">{t('serial.flowSoftware')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -166,7 +169,7 @@ export function SerialConfig({ connectionId, onConnect, onDisconnect, isConnecte
         onClick={isConnected ? onDisconnect : onConnect}
       >
         <Plug className="h-3 w-3 mr-1" />
-        {isConnected ? 'Disconnect' : 'Connect'}
+        {isConnected ? t('serial.disconnect') : t('serial.connect')}
       </Button>
     </div>
   )

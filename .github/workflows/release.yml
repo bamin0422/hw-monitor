@@ -75,6 +75,8 @@ jobs:
             dist/*.exe
             dist/*.AppImage
             dist/*.deb
+            dist/*.yml
+            dist/*.yaml
           if-no-files-found: ignore
 
   release:
@@ -102,3 +104,5 @@ jobs:
             artifacts/**/*.exe
             artifacts/**/*.AppImage
             artifacts/**/*.deb
+            artifacts/**/*.yml
+            artifacts/**/*.yaml

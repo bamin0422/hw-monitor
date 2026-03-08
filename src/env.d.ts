@@ -283,6 +283,18 @@ interface ElectronSession {
   update: (sessionId: string, data: SessionUpdateData) => Promise<IpcResult>
 }
 
+interface ElectronUpdater {
+  check: () => Promise<IpcResult & { version?: string }>
+  download: () => Promise<IpcResult>
+  install: () => Promise<IpcResult>
+  onChecking: (cb: () => void) => () => void
+  onAvailable: (cb: (info: { version: string; releaseDate?: string; releaseNotes?: string }) => void) => () => void
+  onNotAvailable: (cb: () => void) => () => void
+  onProgress: (cb: (progress: { percent: number; bytesPerSecond: number; transferred: number; total: number }) => void) => () => void
+  onDownloaded: (cb: (info: { version: string }) => void) => () => void
+  onError: (cb: (error: string) => void) => () => void
+}
+
 interface ElectronAPI {
   serial: ElectronSerial
   tcp: ElectronTcp
@@ -293,6 +305,7 @@ interface ElectronAPI {
   ble: ElectronBle
   sync: ElectronSync
   session: ElectronSession
+  updater: ElectronUpdater
 }
 
 declare global {

@@ -209,6 +209,43 @@ const sessionAPI = {
   }) => ipcRenderer.invoke('session:update', sessionId, data)
 }
 
+// Updater API
+const updaterAPI = {
+  check: () => ipcRenderer.invoke('updater:check'),
+  download: () => ipcRenderer.invoke('updater:download'),
+  install: () => ipcRenderer.invoke('updater:install'),
+  onChecking: (callback: () => void) => {
+    const handler = () => callback()
+    ipcRenderer.on('updater:checking', handler)
+    return () => ipcRenderer.removeListener('updater:checking', handler)
+  },
+  onAvailable: (callback: (info: { version: string; releaseDate?: string; releaseNotes?: string }) => void) => {
+    const handler = (_: unknown, info: { version: string; releaseDate?: string; releaseNotes?: string }) => callback(info)
+    ipcRenderer.on('updater:available', handler)
+    return () => ipcRenderer.removeListener('updater:available', handler)
+  },
+  onNotAvailable: (callback: () => void) => {
+    const handler = () => callback()
+    ipcRenderer.on('updater:not-available', handler)
+    return () => ipcRenderer.removeListener('updater:not-available', handler)
+  },
+  onProgress: (callback: (progress: { percent: number; bytesPerSecond: number; transferred: number; total: number }) => void) => {
+    const handler = (_: unknown, progress: { percent: number; bytesPerSecond: number; transferred: number; total: number }) => callback(progress)
+    ipcRenderer.on('updater:progress', handler)
+    return () => ipcRenderer.removeListener('updater:progress', handler)
+  },
+  onDownloaded: (callback: (info: { version: string }) => void) => {
+    const handler = (_: unknown, info: { version: string }) => callback(info)
+    ipcRenderer.on('updater:downloaded', handler)
+    return () => ipcRenderer.removeListener('updater:downloaded', handler)
+  },
+  onError: (callback: (error: string) => void) => {
+    const handler = (_: unknown, error: string) => callback(error)
+    ipcRenderer.on('updater:error', handler)
+    return () => ipcRenderer.removeListener('updater:error', handler)
+  }
+}
+
 contextBridge.exposeInMainWorld('electronAPI', {
   serial: serialAPI,
   tcp: tcpAPI,
@@ -218,5 +255,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   llm: llmAPI,
   ble: bleAPI,
   sync: syncAPI,
-  session: sessionAPI
+  session: sessionAPI,
+  updater: updaterAPI
 })

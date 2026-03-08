@@ -2,6 +2,7 @@ import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels'
 import { MonitorPanel } from '@/components/monitor/MonitorPanel'
 import { ChatPanel } from '@/components/chat/ChatPanel'
 import { LoginPage } from '@/components/auth/LoginPage'
+import { UpdateNotification } from '@/components/UpdateNotification'
 import { useEffect } from 'react'
 import { useConnectionStore, loadSavedConnections } from '@/store/connectionStore'
 import { useAuthStore } from '@/store/authStore'
@@ -204,6 +205,8 @@ export default function App() {
           <ChatPanel />
         </Panel>
       </PanelGroup>
+
+      <UpdateNotification />
     </div>
   )
 }

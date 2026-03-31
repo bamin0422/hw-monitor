@@ -132,6 +132,15 @@ export const en: Record<string, string> = {
   // Chat - OpenAI
   'chat.openaiKeyRequired': '⚠️ Open ⚙️ Settings (top-right) → OpenAI card and enter your API Key.',
 
+  // Settings - Built-in agent
+  'settings.builtInAgent': 'HW Monitor Agent',
+  'settings.builtInLabel': 'Built-in',
+  'settings.builtInActive': 'Active',
+  'settings.builtInDesc': 'Built-in AI agent that works without an API key. Daily usage limits apply.',
+  'settings.builtInAdvanced': 'Advanced: Unlimited with personal key',
+  'settings.personalGoogleKey': 'Google AI API Key (Optional)',
+  'settings.personalKeyDesc': 'Enter your own key to remove the daily usage limit.',
+
   // Settings - Free providers
   'settings.freeProviders': 'Free AI Providers',
   'settings.premiumProviders': 'Premium Providers (API Key)',

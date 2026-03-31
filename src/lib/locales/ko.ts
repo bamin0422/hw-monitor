@@ -132,6 +132,15 @@ export const ko: Record<string, string> = {
   // Chat - OpenAI
   'chat.openaiKeyRequired': '⚠️ 오른쪽 상단 ⚙️ 설정 → OpenAI 카드를 열어 API Key를 입력해주세요.',
 
+  // Settings - Built-in agent
+  'settings.builtInAgent': 'HW Monitor 기본 에이전트',
+  'settings.builtInLabel': '기본 제공',
+  'settings.builtInActive': '활성화됨',
+  'settings.builtInDesc': 'API 키 없이 바로 사용할 수 있는 기본 AI 에이전트입니다. 일일 사용량 제한이 적용됩니다.',
+  'settings.builtInAdvanced': '고급: 개인 키로 무제한 사용',
+  'settings.personalGoogleKey': 'Google AI API Key (선택사항)',
+  'settings.personalKeyDesc': '개인 키를 입력하면 일일 제한 없이 무제한으로 사용할 수 있습니다.',
+
   // Settings - Free providers
   'settings.freeProviders': '무료 AI 프로바이더',
   'settings.premiumProviders': '프리미엄 프로바이더 (API Key)',

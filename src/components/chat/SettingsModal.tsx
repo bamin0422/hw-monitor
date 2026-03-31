@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Settings, LogOut, User, Check, ChevronDown, ChevronUp, Key, ExternalLink } from 'lucide-react'
+import { Settings, LogOut, User, Check, ChevronDown, ChevronUp, Key, ExternalLink, Bot, Gauge } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -171,6 +171,54 @@ export function SettingsModal() {
                 </div>
               ) : (
                 <p className="text-xs text-muted-foreground text-center py-2">{t('settings.notConfigured')}</p>
+              )}
+            </div>
+          </section>
+
+          {/* ── Built-in Agent ── */}
+          <section className="space-y-3">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
+              {t('settings.builtInAgent')}
+            </p>
+
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-primary/20 text-primary">HW</span>
+                  <span className="text-xs font-medium">HW Monitor AI</span>
+                  <span className="text-[9px] px-1 py-0 rounded bg-sky-500/15 text-sky-400 font-medium">{t('settings.builtInLabel')}</span>
+                </div>
+                <div className="flex items-center gap-1 text-[10px] text-primary">
+                  <Bot className="h-3 w-3" />
+                  {t('settings.builtInActive')}
+                </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground">{t('settings.builtInDesc')}</p>
+
+              {/* Optional: enter personal Google AI key for unlimited use */}
+              <Button
+                variant={expandedProvider === 'google' ? 'secondary' : 'ghost'}
+                size="sm"
+                className="h-6 gap-1 text-[10px] w-full"
+                onClick={() => toggleProvider('google')}
+              >
+                <Key className="h-3 w-3" />
+                {t('settings.builtInAdvanced')}
+                {expandedProvider === 'google' ? <ChevronUp className="h-3 w-3 ml-auto" /> : <ChevronDown className="h-3 w-3 ml-auto" />}
+              </Button>
+
+              {expandedProvider === 'google' && (
+                <div className="space-y-1.5 border-t border-border/50 pt-2">
+                  <Label className="text-xs">{t('settings.personalGoogleKey')}</Label>
+                  <Input
+                    type="password"
+                    className="font-mono text-xs h-8"
+                    placeholder={t('settings.googleAiKeyPlaceholder')}
+                    value={googleAiKey}
+                    onChange={(e) => setGoogleAiKey(e.target.value)}
+                  />
+                  <p className="text-[10px] text-muted-foreground">{t('settings.personalKeyDesc')}</p>
+                </div>
               )}
             </div>
           </section>
@@ -382,70 +430,6 @@ export function SettingsModal() {
                     placeholder="sk-ant-..."
                     value={apiKey}
                     onChange={(e) => setApiKey(e.target.value)}
-                  />
-                  <p className="text-[10px] text-muted-foreground">{t('settings.encryptedStorage')}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Google card */}
-            <div className="rounded-lg border border-border bg-card/60 p-3 space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <ProviderBadge provider="google" />
-                  <span className="text-xs font-medium">Google</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {hasGoogleAiKey && (
-                    <span className="flex items-center gap-1 text-[10px] text-blue-400">
-                      <Check className="h-3 w-3" />
-                      API
-                    </span>
-                  )}
-                  {user && (
-                    <span className="flex items-center gap-1 text-[10px] text-blue-400">
-                      <Check className="h-3 w-3" />
-                      OAuth
-                    </span>
-                  )}
-                  {!hasGoogleAiKey && !user && (
-                    <span className="text-[10px] text-muted-foreground">{t('settings.notConfigured')}</span>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 gap-1.5 text-[11px] flex-1"
-                  onClick={() => openProviderConsole('google')}
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  {t('settings.getApiKey')}
-                </Button>
-                <Button
-                  variant={expandedProvider === 'google' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  className="h-7 gap-1 text-[11px]"
-                  onClick={() => toggleProvider('google')}
-                >
-                  <Key className="h-3 w-3" />
-                  {expandedProvider === 'google' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                </Button>
-              </div>
-
-              {expandedProvider === 'google' && (
-                <div className="space-y-1.5">
-                  <Label className="text-xs">
-                    AI API Key <span className="text-muted-foreground font-normal">{t('settings.geminiLabel')}</span>
-                  </Label>
-                  <Input
-                    type="password"
-                    className="font-mono text-xs h-8"
-                    placeholder={t('settings.googleAiKeyPlaceholder')}
-                    value={googleAiKey}
-                    onChange={(e) => setGoogleAiKey(e.target.value)}
                   />
                   <p className="text-[10px] text-muted-foreground">{t('settings.encryptedStorage')}</p>
                 </div>

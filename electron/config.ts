@@ -6,7 +6,7 @@ export const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIU
 // ── Built-in Gemini API Key ──
 // Shared key for all users. Per-user daily token limits apply when using this key.
 // Users with their own Google AI key bypass the built-in limit.
-export const BUILTIN_GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''
+export const BUILTIN_GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyACP1aP-I-acXCYqSAwD3-77BPUPieeJUo'
 
 // ── Token Usage Limits ──
 // Daily token limit per user when using the built-in Gemini key.

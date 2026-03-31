@@ -436,6 +436,60 @@ export function SettingsModal() {
               )}
             </div>
 
+            {/* Google card */}
+            <div className="rounded-lg border border-border bg-card/60 p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ProviderBadge provider="google" />
+                  <span className="text-xs font-medium">Google</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {hasGoogleAiKey ? (
+                    <span className="flex items-center gap-1 text-[10px] text-blue-400">
+                      <Check className="h-3 w-3" />
+                      {t('settings.configured')}
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground">{t('settings.notConfigured')}</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1.5 text-[11px] flex-1"
+                  onClick={() => openProviderConsole('google')}
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  {t('settings.getApiKey')}
+                </Button>
+                <Button
+                  variant={expandedProvider === 'google-premium' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className="h-7 gap-1 text-[11px]"
+                  onClick={() => toggleProvider('google-premium')}
+                >
+                  <Key className="h-3 w-3" />
+                  {expandedProvider === 'google-premium' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                </Button>
+              </div>
+
+              {expandedProvider === 'google-premium' && (
+                <div className="space-y-1.5">
+                  <Input
+                    type="password"
+                    className="font-mono text-xs h-8"
+                    placeholder={t('settings.googleAiKeyPlaceholder')}
+                    value={googleAiKey}
+                    onChange={(e) => setGoogleAiKey(e.target.value)}
+                  />
+                  <p className="text-[10px] text-muted-foreground">{t('settings.encryptedStorage')}</p>
+                </div>
+              )}
+            </div>
+
             {/* OpenAI card */}
             <div className="rounded-lg border border-border bg-card/60 p-3 space-y-2">
               <div className="flex items-center justify-between">

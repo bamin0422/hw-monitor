@@ -139,7 +139,7 @@ export const ko: Record<string, string> = {
   'settings.builtInDesc': 'API 키 없이 바로 사용할 수 있는 기본 AI 에이전트입니다. 월간 사용량 제한이 적용됩니다.',
   'settings.builtInAdvanced': '고급: 개인 키로 무제한 사용',
   'settings.personalGoogleKey': 'Google AI API Key (선택사항)',
-  'settings.personalKeyDesc': '개인 키를 입력하면 일일 제한 없이 무제한으로 사용할 수 있습니다.',
+  'settings.personalKeyDesc': '개인 키를 입력하면 월간 제한 없이 무제한으로 사용할 수 있습니다.',
 
   // Settings - Free providers
   'settings.freeProviders': '무료 AI 프로바이더',

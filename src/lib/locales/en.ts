@@ -139,7 +139,7 @@ export const en: Record<string, string> = {
   'settings.builtInDesc': 'Built-in AI agent that works without an API key. Monthly usage limits apply.',
   'settings.builtInAdvanced': 'Advanced: Unlimited with personal key',
   'settings.personalGoogleKey': 'Google AI API Key (Optional)',
-  'settings.personalKeyDesc': 'Enter your own key to remove the daily usage limit.',
+  'settings.personalKeyDesc': 'Enter your own key to remove the monthly usage limit.',
 
   // Settings - Free providers
   'settings.freeProviders': 'Free AI Providers',

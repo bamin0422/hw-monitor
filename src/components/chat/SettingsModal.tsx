@@ -14,7 +14,7 @@ import {
 import { useConnectionStore } from '@/store/connectionStore'
 import { useAuthStore } from '@/store/authStore'
 import { useTranslation } from '@/lib/i18n'
-import { PROVIDER_URLS } from '@/lib/models'
+import { PROVIDER_URLS, GOOGLE_MODELS } from '@/lib/models'
 
 function ProviderBadge({ provider }: { provider: string }) {
   const colors: Record<string, string> = {
@@ -194,6 +194,17 @@ export function SettingsModal() {
                 </div>
               </div>
               <p className="text-[10px] text-muted-foreground">{t('settings.builtInDesc')}</p>
+
+              {/* Built-in model list (read-only) */}
+              <div className="space-y-1">
+                {GOOGLE_MODELS.filter((m) => m.builtIn).map((m) => (
+                  <div key={m.id} className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-secondary/40 border border-border/50">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-blue-500/20 text-blue-400">G</span>
+                    <span className="text-xs font-medium">{m.name}</span>
+                    <span className="ml-auto text-[9px] text-muted-foreground">{t(m.descKey)}</span>
+                  </div>
+                ))}
+              </div>
 
               {/* Optional: enter personal Google AI key for unlimited use */}
               <Button

@@ -123,7 +123,7 @@ const defaultSettings: AppSettings = {
   groqApiKey: '',
   openrouterApiKey: '',
   ollamaUrl: 'http://localhost:11434',
-  model: 'gemini-2.0-flash-exp',
+  model: 'gemini-2.0-flash',
   temperature: 0.7,
   maxTokens: 4096,
   defaultBaudRate: 9600,

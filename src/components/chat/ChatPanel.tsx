@@ -334,25 +334,40 @@ export function ChatPanel() {
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            {/* HW Monitor 기본 에이전트 — always on top */}
-            <SelectGroup>
-              <SelectLabel className="text-[10px] text-muted-foreground flex items-center gap-1">
-                <Bot className="h-3 w-3 text-primary" /> {t('chat.builtInAgentSection')}
-              </SelectLabel>
-              {GOOGLE_MODELS.map((m) => (
-                <SelectItem key={m.id} value={m.id} className="text-[11px] pl-4">
-                  <span className="font-medium">{t('chat.builtInAgentName')}</span>
-                  <span className="ml-1.5 text-muted-foreground text-[10px]">{t('chat.builtInAgentDesc')}</span>
-                </SelectItem>
-              ))}
-            </SelectGroup>
+            {/* Built-in agent — only when built-in key available and no personal Google key */}
+            {builtinKeyAvailable && !settings.googleAiKey && (
+              <SelectGroup>
+                <SelectLabel className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  <Bot className="h-3 w-3 text-primary" /> {t('chat.builtInAgentSection')}
+                </SelectLabel>
+                {GOOGLE_MODELS.map((m) => (
+                  <SelectItem key={m.id} value={m.id} className="text-[11px] pl-4">
+                    <span className="font-medium">{t('chat.builtInAgentName')}</span>
+                    <span className="ml-1.5 text-muted-foreground text-[10px]">{t('chat.builtInAgentDesc')}</span>
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            )}
 
-            {/* Other models — only show when API keys are registered */}
+            {/* Registered models — show when any API key is registered */}
             {(settings.groqApiKey || settings.openrouterApiKey || settings.anthropicApiKey || settings.googleAiKey || settings.openaiApiKey) && (
               <SelectGroup>
                 <SelectLabel className="text-[10px] text-muted-foreground flex items-center gap-1">
                   <Sparkles className="h-3 w-3" /> {t('chat.registeredModels')}
                 </SelectLabel>
+
+                {/* Google (personal key) */}
+                {settings.googleAiKey && (
+                  <>
+                    <SelectLabel className="text-[10px] text-blue-400/70 pl-4">Google</SelectLabel>
+                    {GOOGLE_MODELS.map((m) => (
+                      <SelectItem key={m.id} value={m.id} className="text-[11px] pl-6">
+                        <span className="font-medium">{m.name}</span>
+                        <span className="ml-1.5 text-muted-foreground text-[10px]">{t(m.descKey)}</span>
+                      </SelectItem>
+                    ))}
+                  </>
+                )}
 
                 {/* Groq */}
                 {settings.groqApiKey && (
@@ -386,19 +401,6 @@ export function ChatPanel() {
                     <SelectLabel className="text-[10px] text-primary/70 pl-4">Anthropic</SelectLabel>
                     {ANTHROPIC_MODELS.map((m) => (
                       <SelectItem key={m.id} value={m.id} className="text-[11px] pl-6">
-                        <span className="font-medium">{m.name}</span>
-                        <span className="ml-1.5 text-muted-foreground text-[10px]">{t(m.descKey)}</span>
-                      </SelectItem>
-                    ))}
-                  </>
-                )}
-
-                {/* Google (personal key) */}
-                {settings.googleAiKey && (
-                  <>
-                    <SelectLabel className="text-[10px] text-blue-400/70 pl-4">Google</SelectLabel>
-                    {GOOGLE_MODELS.map((m) => (
-                      <SelectItem key={`personal-${m.id}`} value={`personal-${m.id}`} className="text-[11px] pl-6">
                         <span className="font-medium">{m.name}</span>
                         <span className="ml-1.5 text-muted-foreground text-[10px]">{t(m.descKey)}</span>
                       </SelectItem>

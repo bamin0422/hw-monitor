@@ -29,7 +29,7 @@ export const OPENROUTER_MODELS: ModelInfo[] = [
   { id: 'openrouter/meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B',    provider: 'openrouter', descKey: 'model.llama33or.desc',     free: true },
   { id: 'openrouter/deepseek/deepseek-chat:free',            name: 'DeepSeek V3',      provider: 'openrouter', descKey: 'model.deepseekChat.desc',  free: true },
   { id: 'openrouter/deepseek/deepseek-r1:free',              name: 'DeepSeek R1',      provider: 'openrouter', descKey: 'model.deepseekR1.desc',    free: true },
-  { id: 'openrouter/google/gemini-2.0-flash-exp:free',       name: 'Gemini 2.0 Flash', provider: 'openrouter', descKey: 'model.geminiFlashOr.desc', free: true }
+  { id: 'openrouter/google/gemini-2.0-flash:free',       name: 'Gemini 2.0 Flash', provider: 'openrouter', descKey: 'model.geminiFlashOr.desc', free: true }
 ]
 
 // ── Paid: Anthropic (API key required) ──
@@ -40,10 +40,10 @@ export const ANTHROPIC_MODELS: ModelInfo[] = [
   { id: 'claude-3-5-haiku-20241022',  name: 'Claude 3.5 Haiku',  provider: 'anthropic', descKey: 'model.claude35Haiku.desc',  free: false }
 ]
 
-// ── Built-in: Google Gemini (built-in key available, daily limit applies) ──
+// ── Built-in: Google Gemini (built-in key available, monthly limit applies) ──
 export const GOOGLE_MODELS: ModelInfo[] = [
-  { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash', provider: 'google', descKey: 'model.geminiFlash.desc', free: false, builtIn: true },
-  { id: 'gemini-1.5-pro',       name: 'Gemini 1.5 Pro',   provider: 'google', descKey: 'model.geminiPro.desc',   free: false, builtIn: true }
+  { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', provider: 'google', descKey: 'model.geminiFlash.desc', free: false, builtIn: true },
+  { id: 'gemini-1.5-pro',   name: 'Gemini 1.5 Pro',   provider: 'google', descKey: 'model.geminiPro.desc',   free: false, builtIn: true }
 ]
 
 // ── Paid: OpenAI (API key required) ──

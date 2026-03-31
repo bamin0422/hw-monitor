@@ -151,6 +151,10 @@ export const ko: Record<string, string> = {
   // Chat - Model selector
   'chat.freeModels': '무료 모델',
   'chat.premiumModels': '프리미엄 (API Key 필요)',
+  'chat.builtInModels': '기본 제공 모델',
+  'chat.builtIn': '기본 제공',
+  'chat.dailyUsage': '오늘 사용량',
+  'chat.dailyLimitExceeded': '⚠️ 오늘의 AI 사용량 한도에 도달했습니다. 내일 다시 시도하거나, 설정에서 개인 Google AI API Key를 입력하면 제한 없이 사용할 수 있습니다.',
   'chat.ollamaNotRunning': '⚠️ Ollama가 실행되지 않았습니다. ollama.com 에서 설치 후 `ollama run llama3.2` 명령으로 모델을 실행해주세요.',
   'chat.groqKeyRequired': '⚠️ Groq를 사용하려면 ⚙️ 설정 → Groq 카드에서 무료 API Key를 입력해주세요. (console.groq.com 에서 무료 발급)',
   'chat.openrouterKeyRequired': '⚠️ OpenRouter를 사용하려면 ⚙️ 설정 → OpenRouter 카드에서 API Key를 입력해주세요. (openrouter.ai 에서 무료 발급)',

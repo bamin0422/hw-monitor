@@ -112,10 +112,14 @@ const llmAPI = {
     temperature: number
     baseUrl?: string
     extraHeaders?: Record<string, string>
+    useBuiltinKey?: boolean
+    userId?: string
     connections?: { connectionId: string; connectionType: string; label: string; status: string; config: Record<string, unknown> }[]
     activeConnectionId?: string | null
   }) => ipcRenderer.invoke('llm:stream', params),
   cancel: (requestId: string) => ipcRenderer.invoke('llm:cancel', requestId),
+  builtinKeyAvailable: () => ipcRenderer.invoke('llm:builtin-key-available'),
+  tokenUsage: (userId: string) => ipcRenderer.invoke('llm:token-usage', userId),
   onChunk: (callback: (requestId: string, text: string) => void) => {
     const handler = (_: unknown, requestId: string, text: string) =>
       callback(requestId, text)

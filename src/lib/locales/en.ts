@@ -151,6 +151,10 @@ export const en: Record<string, string> = {
   // Chat - Model selector
   'chat.freeModels': 'Free Models',
   'chat.premiumModels': 'Premium (API Key Required)',
+  'chat.builtInModels': 'Built-in Models',
+  'chat.builtIn': 'Built-in',
+  'chat.dailyUsage': 'Today\'s Usage',
+  'chat.dailyLimitExceeded': '⚠️ You\'ve reached today\'s AI usage limit. Try again tomorrow, or enter your own Google AI API Key in Settings for unlimited use.',
   'chat.ollamaNotRunning': '⚠️ Ollama is not running. Install from ollama.com and run `ollama run llama3.2` to start a model.',
   'chat.groqKeyRequired': '⚠️ To use Groq, open ⚙️ Settings → Groq card and enter your free API Key. (Get one free at console.groq.com)',
   'chat.openrouterKeyRequired': '⚠️ To use OpenRouter, open ⚙️ Settings → OpenRouter card and enter your API Key. (Get one free at openrouter.ai)',

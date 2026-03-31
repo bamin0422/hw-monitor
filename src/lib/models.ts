@@ -6,6 +6,7 @@ export interface ModelInfo {
   provider: Provider
   descKey: string
   free: boolean
+  builtIn?: boolean
 }
 
 // ── Free: Ollama (local, no API key) ──
@@ -39,10 +40,10 @@ export const ANTHROPIC_MODELS: ModelInfo[] = [
   { id: 'claude-3-5-haiku-20241022',  name: 'Claude 3.5 Haiku',  provider: 'anthropic', descKey: 'model.claude35Haiku.desc',  free: false }
 ]
 
-// ── Paid/Free tier: Google (API key required) ──
+// ── Built-in: Google Gemini (built-in key available, daily limit applies) ──
 export const GOOGLE_MODELS: ModelInfo[] = [
-  { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash', provider: 'google', descKey: 'model.geminiFlash.desc', free: false },
-  { id: 'gemini-1.5-pro',       name: 'Gemini 1.5 Pro',   provider: 'google', descKey: 'model.geminiPro.desc',   free: false }
+  { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash', provider: 'google', descKey: 'model.geminiFlash.desc', free: false, builtIn: true },
+  { id: 'gemini-1.5-pro',       name: 'Gemini 1.5 Pro',   provider: 'google', descKey: 'model.geminiPro.desc',   free: false, builtIn: true }
 ]
 
 // ── Paid: OpenAI (API key required) ──

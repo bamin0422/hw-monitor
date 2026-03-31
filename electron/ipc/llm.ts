@@ -1,9 +1,13 @@
 import { ipcMain, BrowserWindow } from 'electron'
 import { randomUUID } from 'crypto'
+import Store from 'electron-store'
 import { streamAgentResponse } from '../llm/agent'
 import { dataStore } from '../llm/vectorstore'
+import { checkTokenBudget, recordTokenUsage, estimateTokens, getTokenUsageStats } from '../llm/token-usage'
+import { BUILTIN_GEMINI_API_KEY } from '../config'
 import type { ConnectionContext, DataEntry } from '../llm/vectorstore'
 
+const store = new Store({ name: 'hw-monitor-settings' })
 const activeRequests = new Map<string, AbortController>()
 
 interface StreamParams {
@@ -15,6 +19,8 @@ interface StreamParams {
   maxTokens: number
   temperature: number
   baseUrl?: string
+  useBuiltinKey?: boolean
+  userId?: string
   // Connection context for RAG and tools
   connections?: ConnectionContext[]
   activeConnectionId?: string | null
@@ -27,6 +33,17 @@ function sendToRenderer(win: BrowserWindow, channel: string, ...args: unknown[])
 }
 
 export function registerLLMHandlers(): void {
+  // ── Built-in Gemini key availability ──
+  ipcMain.handle('llm:builtin-key-available', () => {
+    return { available: !!BUILTIN_GEMINI_API_KEY }
+  })
+
+  // ── Token usage stats ──
+  ipcMain.handle('llm:token-usage', (_, userId: string) => {
+    if (!userId) return { success: false, error: 'No user ID' }
+    return { success: true, ...getTokenUsageStats(userId) }
+  })
+
   // ── Main streaming handler (LangChain-based) ──
   ipcMain.handle('llm:stream', async (event, params: StreamParams) => {
     const requestId = randomUUID()
@@ -38,15 +55,54 @@ export function registerLLMHandlers(): void {
       return { success: false, error: 'No window found' }
     }
 
+    // Resolve API key: use built-in Gemini key if requested
+    let apiKey = params.apiKey
+    const usingBuiltinKey = params.useBuiltinKey && params.provider === 'google'
+
+    if (usingBuiltinKey) {
+      if (!BUILTIN_GEMINI_API_KEY) {
+        return { success: false, error: 'Built-in Gemini key is not configured.' }
+      }
+      // Check per-user token budget
+      const userId = params.userId || 'anonymous'
+      const budget = checkTokenBudget(userId)
+      if (!budget.allowed) {
+        return {
+          success: false,
+          error: `DAILY_LIMIT_EXCEEDED:${budget.used}:${budget.limit}`,
+          used: budget.used,
+          limit: budget.limit
+        }
+      }
+      apiKey = BUILTIN_GEMINI_API_KEY
+    }
+
+    // Estimate input tokens for tracking
+    const inputText = params.messages.map((m) => m.content).join(' ') + (params.systemPrompt || '')
+    const inputTokenEstimate = estimateTokens(inputText)
+
     // Start streaming in background
     ;(async () => {
+      let outputText = ''
+      const originalSend = sendToRenderer
+
       try {
+        // Wrap chunk listener to accumulate output for token counting
+        const origWinSend = win.webContents.send.bind(win.webContents)
+        const patchedSend = (channel: string, ...args: unknown[]) => {
+          if (channel === 'llm:chunk' && args[0] === requestId && typeof args[1] === 'string') {
+            outputText += args[1]
+          }
+          origWinSend(channel, ...args)
+        }
+        win.webContents.send = patchedSend as typeof win.webContents.send
+
         await streamAgentResponse(
           requestId,
           {
             provider: params.provider,
             model: params.model,
-            apiKey: params.apiKey,
+            apiKey,
             messages: params.messages,
             systemPrompt: params.systemPrompt,
             maxTokens: params.maxTokens,
@@ -58,13 +114,25 @@ export function registerLLMHandlers(): void {
           win,
           controller.signal
         )
-        sendToRenderer(win, 'llm:done', requestId)
+
+        // Record token usage for built-in key
+        if (usingBuiltinKey && params.userId) {
+          const outputTokens = estimateTokens(outputText)
+          recordTokenUsage(params.userId, inputTokenEstimate + outputTokens)
+        }
+
+        originalSend(win, 'llm:done', requestId)
       } catch (err) {
         if ((err as Error).name === 'AbortError') {
-          sendToRenderer(win, 'llm:done', requestId)
+          // Still record partial usage
+          if (usingBuiltinKey && params.userId && outputText) {
+            const outputTokens = estimateTokens(outputText)
+            recordTokenUsage(params.userId, inputTokenEstimate + outputTokens)
+          }
+          originalSend(win, 'llm:done', requestId)
         } else {
           const errMsg = err instanceof Error ? err.message : String(err)
-          sendToRenderer(win, 'llm:error', requestId, errMsg)
+          originalSend(win, 'llm:error', requestId, errMsg)
         }
       } finally {
         activeRequests.delete(requestId)

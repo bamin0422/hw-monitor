@@ -1,5 +1,5 @@
-import { useRef, useEffect, useCallback } from 'react'
-import { Trash2, Bot, Zap, Sparkles } from 'lucide-react'
+import { useRef, useEffect, useCallback, useState } from 'react'
+import { Trash2, Bot, Zap, Sparkles, Gauge } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -14,6 +14,7 @@ import { ChatMessage } from './ChatMessage'
 import { ChatInput } from './ChatInput'
 import { SettingsModal } from './SettingsModal'
 import { useConnectionStore } from '@/store/connectionStore'
+import { useAuthStore } from '@/store/authStore'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useTranslation, useI18nStore } from '@/lib/i18n'
 import { buildSystemPrompt } from '@/lib/chatActions'
@@ -64,14 +65,34 @@ export function ChatPanel() {
     activeConnectionId
   } = useConnectionStore()
 
+  const { user } = useAuthStore()
   const { t } = useTranslation()
   const locale = useI18nStore((s) => s.locale)
   const bottomRef = useRef<HTMLDivElement>(null)
   const activeRequestRef = useRef<string | null>(null)
+  const [builtinKeyAvailable, setBuiltinKeyAvailable] = useState(false)
+  const [tokenUsage, setTokenUsage] = useState<{ used: number; limit: number; percentUsed: number } | null>(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [chatMessages])
+
+  // Check built-in Gemini key availability and load token usage
+  useEffect(() => {
+    window.electronAPI.llm.builtinKeyAvailable().then((res: { available: boolean }) => {
+      setBuiltinKeyAvailable(res.available)
+    })
+  }, [])
+
+  // Refresh token usage when user or messages change
+  useEffect(() => {
+    if (!user?.id || !builtinKeyAvailable) return
+    window.electronAPI.llm.tokenUsage(user.id).then((res: { success: boolean; used?: number; limit?: number; percentUsed?: number }) => {
+      if (res.success) {
+        setTokenUsage({ used: res.used!, limit: res.limit!, percentUsed: res.percentUsed! })
+      }
+    })
+  }, [user?.id, builtinKeyAvailable, chatMessages.length])
 
   // Load saved model + API keys on mount so the Select can filter correctly
   useEffect(() => {
@@ -124,10 +145,12 @@ export function ChatPanel() {
           apiKey = settings.openrouterApiKey || (await window.electronAPI.settings.get('openrouterApiKey') as string) || ''
           if (!apiKey) { addChatMessage('assistant', t('chat.openrouterKeyRequired')); return }
           break
-        case 'google':
+        case 'google': {
           apiKey = settings.googleAiKey || (await window.electronAPI.settings.get('googleAiKey') as string) || ''
-          if (!apiKey) { addChatMessage('assistant', t('chat.geminiKeyRequired')); return }
+          // Fall through to built-in key if no personal key
+          if (!apiKey && !builtinKeyAvailable) { addChatMessage('assistant', t('chat.geminiKeyRequired')); return }
           break
+        }
         case 'openai':
           apiKey = settings.openaiApiKey || (await window.electronAPI.settings.get('openaiApiKey') as string) || ''
           if (!apiKey) { addChatMessage('assistant', t('chat.openaiKeyRequired')); return }
@@ -160,6 +183,9 @@ export function ChatPanel() {
           config: c.config as Record<string, unknown>
         }))
 
+        // Use built-in key if provider is Google and user has no personal key
+        const useBuiltinKey = provider === 'google' && !apiKey && builtinKeyAvailable
+
         const result = await window.electronAPI.llm.stream({
           provider,
           model: apiModelId,
@@ -169,12 +195,19 @@ export function ChatPanel() {
           maxTokens: settings.maxTokens,
           temperature: settings.temperature,
           baseUrl,
+          useBuiltinKey,
+          userId: user?.id,
           connections: connectionContexts,
           activeConnectionId
         })
 
         if (!result.success || !result.requestId) {
-          appendChatContent(assistantId, `\n\n❌ Error: ${result.error || 'Failed to start streaming'}`)
+          const error = result.error || 'Failed to start streaming'
+          if (error.startsWith('DAILY_LIMIT_EXCEEDED:')) {
+            appendChatContent(assistantId, t('chat.dailyLimitExceeded'))
+          } else {
+            appendChatContent(assistantId, `\n\n❌ Error: ${error}`)
+          }
           finishChatMessage(assistantId)
           setStreamingMessageId(null)
           return
@@ -334,8 +367,26 @@ export function ChatPanel() {
               )}
             </SelectGroup>
 
+            {/* Built-in Gemini — always show when built-in key is available */}
+            {(builtinKeyAvailable || settings.googleAiKey) && (
+              <SelectGroup>
+                <SelectLabel className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  <Gauge className="h-3 w-3 text-blue-400" /> {t('chat.builtInModels')}
+                </SelectLabel>
+                <SelectLabel className="text-[10px] text-blue-400/70 pl-4">
+                  Google {!settings.googleAiKey && builtinKeyAvailable ? `(${t('chat.builtIn')})` : ''}
+                </SelectLabel>
+                {GOOGLE_MODELS.map((m) => (
+                  <SelectItem key={m.id} value={m.id} className="text-[11px] pl-6">
+                    <span className="font-medium">{m.name}</span>
+                    <span className="ml-1.5 text-muted-foreground text-[10px]">{t(m.descKey)}</span>
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            )}
+
             {/* Paid models — only render the group if at least one key is configured */}
-            {(settings.anthropicApiKey || settings.googleAiKey || settings.openaiApiKey) && (
+            {(settings.anthropicApiKey || settings.openaiApiKey) && (
               <SelectGroup>
                 <SelectLabel className="text-[10px] text-muted-foreground flex items-center gap-1">
                   <Sparkles className="h-3 w-3" /> {t('chat.premiumModels')}
@@ -344,17 +395,6 @@ export function ChatPanel() {
                   <>
                     <SelectLabel className="text-[10px] text-primary/70 pl-4">Anthropic</SelectLabel>
                     {ANTHROPIC_MODELS.map((m) => (
-                      <SelectItem key={m.id} value={m.id} className="text-[11px] pl-6">
-                        <span className="font-medium">{m.name}</span>
-                        <span className="ml-1.5 text-muted-foreground text-[10px]">{t(m.descKey)}</span>
-                      </SelectItem>
-                    ))}
-                  </>
-                )}
-                {settings.googleAiKey && (
-                  <>
-                    <SelectLabel className="text-[10px] text-blue-400/70 pl-4">Google</SelectLabel>
-                    {GOOGLE_MODELS.map((m) => (
                       <SelectItem key={m.id} value={m.id} className="text-[11px] pl-6">
                         <span className="font-medium">{m.name}</span>
                         <span className="ml-1.5 text-muted-foreground text-[10px]">{t(m.descKey)}</span>
@@ -378,6 +418,28 @@ export function ChatPanel() {
           </SelectContent>
         </Select>
       </div>
+
+      {/* Token usage bar — shown when using built-in Gemini key */}
+      {builtinKeyAvailable && !settings.googleAiKey && tokenUsage && provider === 'google' && (
+        <div className="px-3 py-1 border-t border-border bg-card/20">
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-0.5">
+            <span className="flex items-center gap-1">
+              <Gauge className="h-3 w-3" />
+              {t('chat.dailyUsage')}
+            </span>
+            <span>{(tokenUsage.used / 1000).toFixed(1)}K / {(tokenUsage.limit / 1000).toFixed(0)}K</span>
+          </div>
+          <div className="h-1 bg-muted rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all ${
+                tokenUsage.percentUsed >= 90 ? 'bg-red-500' :
+                tokenUsage.percentUsed >= 70 ? 'bg-yellow-500' : 'bg-blue-500'
+              }`}
+              style={{ width: `${Math.min(100, tokenUsage.percentUsed)}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       <ChatInput onSend={handleSend} disabled={!!streamingMessageId} />
     </div>

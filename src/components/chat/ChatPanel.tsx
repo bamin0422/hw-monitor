@@ -316,10 +316,19 @@ export function ChatPanel() {
             <SelectValue>
               {modelInfo && (
                 <span className="flex items-center gap-1.5">
-                  <span className={`text-[9px] px-1 py-0 rounded font-bold ${badgeColor}`}>
-                    {PROVIDER_SHORT[provider]}
+                  {/* Show "HW" badge for built-in agent, provider badge otherwise */}
+                  {modelInfo.builtIn && !settings.googleAiKey && builtinKeyAvailable ? (
+                    <span className="text-[9px] px-1 py-0 rounded font-bold bg-blue-500/15 text-blue-400">HW</span>
+                  ) : (
+                    <span className={`text-[9px] px-1 py-0 rounded font-bold ${badgeColor}`}>
+                      {PROVIDER_SHORT[provider]}
+                    </span>
+                  )}
+                  <span>
+                    {modelInfo.builtIn && !settings.googleAiKey && builtinKeyAvailable
+                      ? t('chat.builtInAgentName')
+                      : modelInfo.name}
                   </span>
-                  <span>{modelInfo.name}</span>
                   {modelInfo.free && <Zap className="h-3 w-3 text-yellow-400" />}
                 </span>
               )}
@@ -367,17 +376,29 @@ export function ChatPanel() {
               )}
             </SelectGroup>
 
-            {/* Built-in Gemini — always show when built-in key is available */}
-            {(builtinKeyAvailable || settings.googleAiKey) && (
+            {/* Built-in agent — always show when built-in key is available */}
+            {builtinKeyAvailable && !settings.googleAiKey && (
               <SelectGroup>
                 <SelectLabel className="text-[10px] text-muted-foreground flex items-center gap-1">
-                  <Gauge className="h-3 w-3 text-blue-400" /> {t('chat.builtInModels')}
-                </SelectLabel>
-                <SelectLabel className="text-[10px] text-blue-400/70 pl-4">
-                  Google {!settings.googleAiKey && builtinKeyAvailable ? `(${t('chat.builtIn')})` : ''}
+                  <Bot className="h-3 w-3 text-blue-400" /> {t('chat.builtInAgentSection')}
                 </SelectLabel>
                 {GOOGLE_MODELS.map((m) => (
-                  <SelectItem key={m.id} value={m.id} className="text-[11px] pl-6">
+                  <SelectItem key={m.id} value={m.id} className="text-[11px] pl-4">
+                    <span className="font-medium">{t('chat.builtInAgentName')}</span>
+                    <span className="ml-1.5 text-muted-foreground text-[10px]">{t('chat.builtInAgentDesc')}</span>
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            )}
+
+            {/* Google — only show when user has their own key */}
+            {settings.googleAiKey && (
+              <SelectGroup>
+                <SelectLabel className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  <Sparkles className="h-3 w-3 text-blue-400" /> Google
+                </SelectLabel>
+                {GOOGLE_MODELS.map((m) => (
+                  <SelectItem key={m.id} value={m.id} className="text-[11px] pl-4">
                     <span className="font-medium">{m.name}</span>
                     <span className="ml-1.5 text-muted-foreground text-[10px]">{t(m.descKey)}</span>
                   </SelectItem>

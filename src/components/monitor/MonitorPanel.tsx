@@ -125,7 +125,7 @@ function TabItem({
           : 'border-transparent text-muted-foreground hover:text-foreground'
       )}
     >
-      <span className={conn.status === 'connected' || conn.status === 'listening' ? 'text-green-500' : 'text-muted-foreground'}>
+      <span className={conn.status === 'connected' || conn.status === 'listening' ? 'text-sky-500' : 'text-muted-foreground'}>
         {TYPE_ICONS[conn.type]}
       </span>
       {editing ? (
@@ -629,7 +629,7 @@ export function MonitorPanel() {
                   {t('monitor.clients')} ({activeConn.connectedClients?.length})
                 </span>
                 {activeConn.connectedClients?.map((addr) => (
-                  <div key={addr} className="text-xs text-green-400 font-mono">{addr}</div>
+                  <div key={addr} className="text-xs text-sky-400 font-mono">{addr}</div>
                 ))}
               </div>
             )}

@@ -124,7 +124,7 @@ export function ChatInput({ onSend, disabled }: Props) {
                       <span className={cn(
                         'w-1.5 h-1.5 rounded-full mr-2',
                         (conn.status === 'connected' || conn.status === 'listening')
-                          ? 'bg-green-500' : 'bg-muted-foreground'
+                          ? 'bg-sky-500' : 'bg-muted-foreground'
                       )} />
                       {conn.customLabel || conn.label}
                       <span className="ml-auto text-muted-foreground text-[10px]">

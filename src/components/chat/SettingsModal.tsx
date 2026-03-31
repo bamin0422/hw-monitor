@@ -23,7 +23,7 @@ function ProviderBadge({ provider }: { provider: string }) {
     openrouter: 'bg-cyan-500/20 text-cyan-400',
     anthropic: 'bg-primary/20 text-primary',
     google: 'bg-blue-500/20 text-blue-400',
-    openai: 'bg-emerald-500/20 text-emerald-400'
+    openai: 'bg-teal-500/20 text-teal-400'
   }
   const labels: Record<string, string> = {
     ollama: 'OL',
@@ -461,7 +461,7 @@ export function SettingsModal() {
                 </div>
                 <div className="flex items-center gap-2">
                   {hasOpenaiKey ? (
-                    <span className="flex items-center gap-1 text-[10px] text-emerald-400">
+                    <span className="flex items-center gap-1 text-[10px] text-teal-400">
                       <Check className="h-3 w-3" />
                       {t('settings.configured')}
                     </span>

@@ -91,7 +91,7 @@ export function UpdateNotification() {
 
         {state === 'downloaded' && (
           <>
-            <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+            <CheckCircle2 className="h-5 w-5 text-sky-500 shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground">
                 v{info.version} ready
@@ -101,7 +101,7 @@ export function UpdateNotification() {
               </p>
               <button
                 onClick={() => window.electronAPI.updater.install()}
-                className="mt-2 px-3 py-1 text-xs font-medium bg-green-600 text-white rounded hover:bg-green-500 transition-colors"
+                className="mt-2 px-3 py-1 text-xs font-medium bg-sky-600 text-white rounded hover:bg-sky-500 transition-colors"
               >
                 Restart Now
               </button>

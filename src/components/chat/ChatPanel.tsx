@@ -38,7 +38,7 @@ const PROVIDER_BADGE: Record<Provider, string> = {
   openrouter: 'bg-cyan-500/15 text-cyan-400',
   anthropic: 'bg-primary/15 text-primary',
   google: 'bg-blue-500/15 text-blue-400',
-  openai: 'bg-emerald-500/15 text-emerald-400'
+  openai: 'bg-teal-500/15 text-teal-400'
 }
 
 const PROVIDER_SHORT: Record<Provider, string> = {
@@ -425,7 +425,7 @@ export function ChatPanel() {
                 )}
                 {settings.openaiApiKey && (
                   <>
-                    <SelectLabel className="text-[10px] text-emerald-400/70 pl-4">OpenAI</SelectLabel>
+                    <SelectLabel className="text-[10px] text-teal-400/70 pl-4">OpenAI</SelectLabel>
                     {OPENAI_MODELS.map((m) => (
                       <SelectItem key={m.id} value={m.id} className="text-[11px] pl-6">
                         <span className="font-medium">{m.name}</span>

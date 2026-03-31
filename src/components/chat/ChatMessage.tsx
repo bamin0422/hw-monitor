@@ -44,7 +44,7 @@ function ActionCard({
   return (
     <div className={cn(
       'my-2 rounded-lg border p-2.5 text-xs',
-      status === 'success' && 'border-green-500/30 bg-green-500/5',
+      status === 'success' && 'border-sky-500/30 bg-sky-500/5',
       status === 'error' && 'border-red-500/30 bg-red-500/5',
       status === 'idle' && 'border-primary/30 bg-primary/5',
       status === 'executing' && 'border-yellow-500/30 bg-yellow-500/5'
@@ -72,7 +72,7 @@ function ActionCard({
         </div>
       )}
       {status === 'success' && (
-        <div className="flex items-center gap-1.5 text-green-400">
+        <div className="flex items-center gap-1.5 text-sky-400">
           <Check className="h-3 w-3" />
           <span>{t('action.success')}</span>
         </div>
@@ -190,7 +190,7 @@ export function ChatMessage({ message, onActionExecuted }: Props) {
             className="absolute -top-2 -right-2 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
             onClick={handleCopy}
           >
-            {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+            {copied ? <Check className="h-3 w-3 text-sky-500" /> : <Copy className="h-3 w-3" />}
           </Button>
         )}
       </div>

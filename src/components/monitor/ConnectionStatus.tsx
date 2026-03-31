@@ -13,7 +13,7 @@ export function ConnectionStatus({ status, label }: Props) {
   const statusConfig = {
     disconnected: { color: 'bg-gray-500', text: t('status.disconnected'), pulse: false },
     connecting: { color: 'bg-yellow-500', text: t('status.connecting'), pulse: true },
-    connected: { color: 'bg-green-500', text: t('status.connected'), pulse: false },
+    connected: { color: 'bg-sky-500', text: t('status.connected'), pulse: false },
     listening: { color: 'bg-blue-500', text: t('status.listening'), pulse: true },
     error: { color: 'bg-red-500', text: t('status.error'), pulse: false }
   }

@@ -69,7 +69,7 @@ export function registerLLMHandlers(): void {
       if (!budget.allowed) {
         return {
           success: false,
-          error: `DAILY_LIMIT_EXCEEDED:${budget.used}:${budget.limit}`,
+          error: `MONTHLY_LIMIT_EXCEEDED:${budget.used}:${budget.limit}`,
           used: budget.used,
           limit: budget.limit
         }

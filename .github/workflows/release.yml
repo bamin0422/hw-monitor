@@ -58,6 +58,8 @@ jobs:
         run: npm install --no-audit --no-fund
 
       - name: Build Electron app
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: npm run build
 
       - name: Package for ${{ matrix.platform }}

@@ -202,8 +202,8 @@ export function ChatPanel() {
 
         if (!result.success || !result.requestId) {
           const error = result.error || 'Failed to start streaming'
-          if (error.startsWith('DAILY_LIMIT_EXCEEDED:')) {
-            appendChatContent(assistantId, t('chat.dailyLimitExceeded'))
+          if (error.startsWith('MONTHLY_LIMIT_EXCEEDED:')) {
+            appendChatContent(assistantId, t('chat.monthlyLimitExceeded'))
           } else {
             appendChatContent(assistantId, `\n\n❌ Error: ${error}`)
           }
@@ -430,7 +430,7 @@ export function ChatPanel() {
           <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-0.5">
             <span className="flex items-center gap-1">
               <Gauge className="h-3 w-3" />
-              {t('chat.dailyUsage')}
+              {t('chat.monthlyUsage')}
             </span>
             <span>{(tokenUsage.used / 1000).toFixed(1)}K / {(tokenUsage.limit / 1000).toFixed(0)}K</span>
           </div>

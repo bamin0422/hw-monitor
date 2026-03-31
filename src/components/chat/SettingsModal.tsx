@@ -229,42 +229,6 @@ export function SettingsModal() {
               {t('settings.freeProviders')}
             </p>
 
-            {/* Ollama card */}
-            <div className="rounded-lg border border-border bg-card/60 p-3 space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <ProviderBadge provider="ollama" />
-                  <span className="text-xs font-medium">Ollama</span>
-                  <span className="text-[9px] px-1 py-0 rounded bg-yellow-500/15 text-yellow-400 font-medium">{t('settings.free')}</span>
-                </div>
-                <span className="text-[10px] text-muted-foreground">{t('settings.noKeyNeeded')}</span>
-              </div>
-
-              <Button
-                variant={expandedProvider === 'ollama' ? 'secondary' : 'outline'}
-                size="sm"
-                className="h-7 gap-1 text-[11px] w-full"
-                onClick={() => toggleProvider('ollama')}
-              >
-                <Settings className="h-3 w-3" />
-                {t('settings.ollamaSettings')}
-                {expandedProvider === 'ollama' ? <ChevronUp className="h-3 w-3 ml-auto" /> : <ChevronDown className="h-3 w-3 ml-auto" />}
-              </Button>
-
-              {expandedProvider === 'ollama' && (
-                <div className="space-y-1.5">
-                  <Label className="text-xs">{t('settings.ollamaUrl')}</Label>
-                  <Input
-                    className="font-mono text-xs h-8"
-                    placeholder="http://localhost:11434"
-                    value={ollamaUrl}
-                    onChange={(e) => setOllamaUrl(e.target.value)}
-                  />
-                  <p className="text-[10px] text-muted-foreground">{t('settings.ollamaDesc')}</p>
-                </div>
-              )}
-            </div>
-
             {/* Groq card */}
             <div className="rounded-lg border border-border bg-card/60 p-3 space-y-2">
               <div className="flex items-center justify-between">

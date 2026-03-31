@@ -165,6 +165,7 @@ export const en: Record<string, string> = {
   'chat.builtInAgentSection': 'HW Monitor Agent',
   'chat.builtInAgentName': 'HW Monitor AI',
   'chat.builtInAgentDesc': 'Built-in · Daily usage limit',
+  'chat.registeredModels': 'Registered Models',
   'chat.dailyUsage': 'Today\'s Usage',
   'chat.dailyLimitExceeded': '⚠️ You\'ve reached today\'s AI usage limit. Try again tomorrow, or enter your own Google AI API Key in Settings for unlimited use.',
   'chat.ollamaNotRunning': '⚠️ Ollama is not running. Install from ollama.com and run `ollama run llama3.2` to start a model.',

@@ -165,6 +165,7 @@ export const ko: Record<string, string> = {
   'chat.builtInAgentSection': 'HW Monitor 기본 에이전트',
   'chat.builtInAgentName': 'HW Monitor AI',
   'chat.builtInAgentDesc': '기본 제공 · 일일 사용량 제한',
+  'chat.registeredModels': '등록된 모델',
   'chat.dailyUsage': '오늘 사용량',
   'chat.dailyLimitExceeded': '⚠️ 오늘의 AI 사용량 한도에 도달했습니다. 내일 다시 시도하거나, 설정에서 개인 Google AI API Key를 입력하면 제한 없이 사용할 수 있습니다.',
   'chat.ollamaNotRunning': '⚠️ Ollama가 실행되지 않았습니다. ollama.com 에서 설치 후 `ollama run llama3.2` 명령으로 모델을 실행해주세요.',

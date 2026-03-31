@@ -19,7 +19,6 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { useTranslation, useI18nStore } from '@/lib/i18n'
 import { buildSystemPrompt } from '@/lib/chatActions'
 import {
-  OLLAMA_MODELS,
   GROQ_MODELS,
   OPENROUTER_MODELS,
   ANTHROPIC_MODELS,
@@ -335,83 +334,53 @@ export function ChatPanel() {
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            {/* Free models — only show sections where the provider is usable */}
+            {/* HW Monitor 기본 에이전트 — always on top */}
             <SelectGroup>
               <SelectLabel className="text-[10px] text-muted-foreground flex items-center gap-1">
-                <Zap className="h-3 w-3 text-yellow-400" /> {t('chat.freeModels')}
+                <Bot className="h-3 w-3 text-primary" /> {t('chat.builtInAgentSection')}
               </SelectLabel>
-              {/* Ollama: always visible — works without an API key */}
-              <>
-                <SelectLabel className="text-[10px] text-orange-400/70 pl-4">Ollama (Local)</SelectLabel>
-                {OLLAMA_MODELS.map((m) => (
-                  <SelectItem key={m.id} value={m.id} className="text-[11px] pl-6">
-                    <span className="font-medium">{m.name}</span>
-                    <span className="ml-1.5 text-muted-foreground text-[10px]">{t(m.descKey)}</span>
-                  </SelectItem>
-                ))}
-              </>
-              {/* Groq: only show if API key is configured */}
-              {settings.groqApiKey && (
-                <>
-                  <SelectLabel className="text-[10px] text-purple-400/70 pl-4">Groq</SelectLabel>
-                  {GROQ_MODELS.map((m) => (
-                    <SelectItem key={m.id} value={m.id} className="text-[11px] pl-6">
-                      <span className="font-medium">{m.name}</span>
-                      <span className="ml-1.5 text-muted-foreground text-[10px]">{t(m.descKey)}</span>
-                    </SelectItem>
-                  ))}
-                </>
-              )}
-              {/* OpenRouter: only show if API key is configured */}
-              {settings.openrouterApiKey && (
-                <>
-                  <SelectLabel className="text-[10px] text-cyan-400/70 pl-4">OpenRouter</SelectLabel>
-                  {OPENROUTER_MODELS.map((m) => (
-                    <SelectItem key={m.id} value={m.id} className="text-[11px] pl-6">
-                      <span className="font-medium">{m.name}</span>
-                      <span className="ml-1.5 text-muted-foreground text-[10px]">{t(m.descKey)}</span>
-                    </SelectItem>
-                  ))}
-                </>
-              )}
+              {GOOGLE_MODELS.map((m) => (
+                <SelectItem key={m.id} value={m.id} className="text-[11px] pl-4">
+                  <span className="font-medium">{t('chat.builtInAgentName')}</span>
+                  <span className="ml-1.5 text-muted-foreground text-[10px]">{t('chat.builtInAgentDesc')}</span>
+                </SelectItem>
+              ))}
             </SelectGroup>
 
-            {/* Built-in agent — always show when built-in key is available */}
-            {builtinKeyAvailable && !settings.googleAiKey && (
+            {/* Other models — only show when API keys are registered */}
+            {(settings.groqApiKey || settings.openrouterApiKey || settings.anthropicApiKey || settings.googleAiKey || settings.openaiApiKey) && (
               <SelectGroup>
                 <SelectLabel className="text-[10px] text-muted-foreground flex items-center gap-1">
-                  <Bot className="h-3 w-3 text-blue-400" /> {t('chat.builtInAgentSection')}
+                  <Sparkles className="h-3 w-3" /> {t('chat.registeredModels')}
                 </SelectLabel>
-                {GOOGLE_MODELS.map((m) => (
-                  <SelectItem key={m.id} value={m.id} className="text-[11px] pl-4">
-                    <span className="font-medium">{t('chat.builtInAgentName')}</span>
-                    <span className="ml-1.5 text-muted-foreground text-[10px]">{t('chat.builtInAgentDesc')}</span>
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            )}
 
-            {/* Google — only show when user has their own key */}
-            {settings.googleAiKey && (
-              <SelectGroup>
-                <SelectLabel className="text-[10px] text-muted-foreground flex items-center gap-1">
-                  <Sparkles className="h-3 w-3 text-blue-400" /> Google
-                </SelectLabel>
-                {GOOGLE_MODELS.map((m) => (
-                  <SelectItem key={m.id} value={m.id} className="text-[11px] pl-4">
-                    <span className="font-medium">{m.name}</span>
-                    <span className="ml-1.5 text-muted-foreground text-[10px]">{t(m.descKey)}</span>
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            )}
+                {/* Groq */}
+                {settings.groqApiKey && (
+                  <>
+                    <SelectLabel className="text-[10px] text-purple-400/70 pl-4">Groq</SelectLabel>
+                    {GROQ_MODELS.map((m) => (
+                      <SelectItem key={m.id} value={m.id} className="text-[11px] pl-6">
+                        <span className="font-medium">{m.name}</span>
+                        <span className="ml-1.5 text-muted-foreground text-[10px]">{t(m.descKey)}</span>
+                      </SelectItem>
+                    ))}
+                  </>
+                )}
 
-            {/* Paid models — only render the group if at least one key is configured */}
-            {(settings.anthropicApiKey || settings.openaiApiKey) && (
-              <SelectGroup>
-                <SelectLabel className="text-[10px] text-muted-foreground flex items-center gap-1">
-                  <Sparkles className="h-3 w-3" /> {t('chat.premiumModels')}
-                </SelectLabel>
+                {/* OpenRouter */}
+                {settings.openrouterApiKey && (
+                  <>
+                    <SelectLabel className="text-[10px] text-cyan-400/70 pl-4">OpenRouter</SelectLabel>
+                    {OPENROUTER_MODELS.map((m) => (
+                      <SelectItem key={m.id} value={m.id} className="text-[11px] pl-6">
+                        <span className="font-medium">{m.name}</span>
+                        <span className="ml-1.5 text-muted-foreground text-[10px]">{t(m.descKey)}</span>
+                      </SelectItem>
+                    ))}
+                  </>
+                )}
+
+                {/* Anthropic */}
                 {settings.anthropicApiKey && (
                   <>
                     <SelectLabel className="text-[10px] text-primary/70 pl-4">Anthropic</SelectLabel>
@@ -423,6 +392,21 @@ export function ChatPanel() {
                     ))}
                   </>
                 )}
+
+                {/* Google (personal key) */}
+                {settings.googleAiKey && (
+                  <>
+                    <SelectLabel className="text-[10px] text-blue-400/70 pl-4">Google</SelectLabel>
+                    {GOOGLE_MODELS.map((m) => (
+                      <SelectItem key={`personal-${m.id}`} value={`personal-${m.id}`} className="text-[11px] pl-6">
+                        <span className="font-medium">{m.name}</span>
+                        <span className="ml-1.5 text-muted-foreground text-[10px]">{t(m.descKey)}</span>
+                      </SelectItem>
+                    ))}
+                  </>
+                )}
+
+                {/* OpenAI */}
                 {settings.openaiApiKey && (
                   <>
                     <SelectLabel className="text-[10px] text-teal-400/70 pl-4">OpenAI</SelectLabel>
